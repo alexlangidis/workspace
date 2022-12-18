@@ -87,7 +87,7 @@ select {
   width: 20rem;
 }
 
-.btn {
+.btn, .reset {
   margin: 5px 0;
   background-color: var(--color-primary);
   color: var(--white);
@@ -98,7 +98,7 @@ select {
   transition: all 0.3s;
 }
 
-.btn:hover {
+.btn:hover, .reset:hover {
   background-color: var(--color-sec);
 }
 
