@@ -1,0 +1,215 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap");
+
+:root {
+  --white: #fff;
+  --black: #1c2b2d;
+  --blue: #31326f;
+  --light-blue: #005490;
+  --color-primary: #9d0191;
+  --color-sec: #db6400;
+  --grey: #eee;
+  --dark-grey: #222831;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+body {
+  font-family: "Open Sans", sans-serif;
+  background-color: #db6400;
+}
+
+img {
+  width: 100%;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.calc {
+    width: 40rem;
+    color: var(--white);
+    background-color: #222831;
+    border-radius: 5px;
+}
+
+.calc2 {
+    width: 20rem;
+    color: var(--white);
+    background-color: #222831;
+    border-radius: 5px;
+    padding: 1.7rem;
+}
+
+.head {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.head2 {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.title {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.myForm {
+    border-top: 1px solid orange;
+    width: 90%;
+    margin: 0 auto;
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 1rem;
+}
+
+form div {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+
+.tim_agoras, .tim_lianikis , select {
+    border-bottom: 1px solid #9d0191;
+    margin: 1rem;
+}
+
+.tim_agoras input, .tim_lianikis input, select {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    border: none;
+    width: 12rem;
+}
+
+
+.profit1 {
+    border: 2px solid rgb(0, 216, 11);
+    padding: 0.8rem 4rem;
+    margin: 2rem auto;
+    font-size: 2rem;
+}
+
+
+.error {
+    display: none;
+    color: red;
+    text-align: center;
+}
+
+
+/* Buttons style */
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.btn, .reset {
+    font-size: 1.5rem;
+    padding: 1rem;
+    border: none;
+    border-radius: 5px;
+    color: var(--white);
+    margin: 0 1rem;
+}
+
+#orange {
+    background-color: var(--color-sec);
+}
+#red {
+    background-color: red;
+}
+
+.btn:hover, .reset:hover {
+    opacity: 0.7;
+    transition: 0.3s;
+    cursor: pointer;
+  }
+
+  .btn:active, .reset:active {
+    transform: scale(0.9);
+    transition: 0.3s;
+  }
+
+
+  @media screen and (max-width: 1200px) {
+
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      transition: 0.3s;
+    }
+
+    .calc2 {
+      width: 40rem;
+      animation: reverse 0.3s;
+      transition: 0.3s;
+    }
+    
+  }
+
+
+  @media screen and (max-width: 800px) {
+    body {
+      font-size: 10px;
+      transition: 0.3s;
+    }
+
+    .container {
+      width: 20rem;
+      display: flex;
+      flex-direction: column;
+      transition: 0.3s;
+    }
+
+    .calc {
+      width: 20rem;
+      font-size: 10px;
+      transition: 0.3s;
+    }
+
+    .calc2 {
+      width: 20rem;
+      font-size: 10px;
+      transition: 0.3s;
+    }
+
+    form div {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+
+    .tim_agoras input, .tim_lianikis input, select {
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: none;
+      width: 8rem;
+      transition: 0.3s;
+  }
+    
+  }

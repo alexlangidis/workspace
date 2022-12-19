@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skroutz Calculator</title>
+    <script
+      src="https://kit.fontawesome.com/1935d064dd.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    
+    <div class="container">
+        <div class="calc">
+            <div class="head">
+                <div class="title">
+                    <h1>Skroutz Calculator</h1>
+                </div>
+            </div>
+            
+            <div class="myForm">
+                <form action="" class="form1">
+                    <div class="tim_agoras">
+                        <label for="">Τιμ. Αγορας (Χωρις ΦΠΑ):</label>
+                        <input type="text" placeholder="Τιμη Αγορας" class="agora" required>
+                    </div>
+                    <div class="tim_lianikis">
+                        <label for="">Τιμ. Λιανικης (Με ΦΠΑ) :</label>
+                        <input type="text" placeholder="Τιμη Λιανικης" class="lianiki" required>
+                    </div>
+                    <div>
+                        <label for="">Ποσοστο % Skroutz</label>
+                        <select name="pososto_skroutz" id="" class="pososto"
+                        required>
+                            <option value="" disabled>--Select Option--</option>
+                            <option value="0.20" selected>20% με διαφήμιση</option>
+                            <option value="0.14">14% χωρις διαφήμιση</option>
+                            <option value="0.12">12% με διαφήμιση</option>
+                            <option value="0.09">9% χωρις διαφήμιση</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="calc2">
+            <div class="head2">
+                <div class="title">
+                    <h1>Profit</h1>
+                </div>
+                <span class="profit1">0</span>
+                <p class="error">12</p>
+            </div>
+            <div class="buttons">
+                <button class="reset" id="red">Reset</button>
+                <Calculate class="btn" id="orange">Calculate</button>
+            </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
