@@ -42,4 +42,4 @@ function convertWeight(e) {
 
 reset.addEventListener("click", ()=>{
     form.reset();
-})
+});
