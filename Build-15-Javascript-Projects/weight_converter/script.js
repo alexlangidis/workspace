@@ -3,6 +3,7 @@ const kilograms = document.querySelector(".kilograms");
 const grams = document.querySelector(".grams");
 const ounces = document.querySelector(".ounces");
 const form = document.querySelector("form");
+const reset = document.querySelector(".reset");
 
 
 form.addEventListener("input", convertWeight);
@@ -36,7 +37,9 @@ function convertWeight(e) {
         grams.value = x / 0.035274;
         pounds.value = x * 0.0625;
     }
-
-
-
 }
+
+
+reset.addEventListener("click", ()=>{
+    form.reset();
+})
