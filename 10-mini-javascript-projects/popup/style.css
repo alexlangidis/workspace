@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins:400,700,900');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    background-color: brown;
+    font-size: 1.5rem;
+}
+
+#open {
+    padding: 1rem;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    background-color: rgb(250, 183, 0);
+}
+
+
+#open:hover {
+    opacity: 0.9;
+    cursor: pointer;
+}
+
+#open:active {
+    transform: scale(1.1);
+}
+
+
+.popup-container {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgb(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    display: none;
+
+}
+
+.popup-container.active {
+    display: flex;
+    animation: fadeIn 1s;
+}
+
+.popup {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px;
+    padding: 3rem;
+    width: 800px;
+    margin: 1rem;
+    overflow: hidden;
+    position: relative;
+    font-size: 1rem;
+    text-align: center;
+}
+
+#close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: transparent;
+    border: none;
+    color: red;
+    font-size: 1rem;
+}
+
+
+#close:hover {
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
