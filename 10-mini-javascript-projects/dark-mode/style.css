@@ -14,7 +14,7 @@ body {
     font-family: "Poppins", sans-serif;
     margin: 0;
     min-height: 100vh;
-    transition: background 0.3s linear;
+    transition: background 0.3s linear, color 0.3s linear;
 }
 
 body.dark {
