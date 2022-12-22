@@ -4,9 +4,10 @@ const stop1 = document.querySelector("#stop");
 
 function heartRain() {
     const heart = document.createElement('div');
-    heart.classList.add('heart');
-
     heart.innerHTML = "❤️"
+    heart.classList.add('heart');
+    
+    
     heart.style.left = Math.random() *100 + "vw"
     heart.style.animationDuration = Math.random() *2 + 3 + "s";
 
