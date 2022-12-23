@@ -35,11 +35,3 @@ body.dark {
     padding: 1rem;
     cursor: pointer;
 }
-
-.fa-thermometer-quarter {
-    display: none;
-}
-
-.fa-user-circle {
-    display: block;
-}
