@@ -1,5 +1,6 @@
 const toggleDarkmode = document.querySelector('.toggle-darkmode');
 const toggleText = document.querySelector('.toggle-text');
+const clean = document.querySelector(".clean");
 
 
 let darkMode = localStorage.getItem("darkMode");
@@ -35,4 +36,10 @@ toggleDarkmode.addEventListener("click", ()=> {
     } else {
         disableDarkMode();
     }
+})
+
+clean.addEventListener('click', ()=> {
+    localStorage.removeItem('darkMode');
+    localStorage.clear();
+    location.reload()
 })
