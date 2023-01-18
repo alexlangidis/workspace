@@ -11,54 +11,121 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    
-    <div class="container">
-        <div class="calc">
-            <div class="head">
-                <div class="title">
-                    <h1>Skroutz Calculator</h1>
-                </div>
-            </div>
-            
-            <div class="myForm">
-                <form action="" class="form1">
-                    <div class="tim_agoras">
-                        <label for="">Τιμ. Αγορας (Χωρις ΦΠΑ):</label>
-                        <input type="text" placeholder="Τιμη Αγορας" class="agora" required>
-                    </div>
-                    <div class="tim_lianikis">
-                        <label for="">Τιμ. Λιανικης (Με ΦΠΑ) :</label>
-                        <input type="text" placeholder="Τιμη Λιανικης" class="lianiki" required>
-                    </div>
-                    <div>
-                        <label for="">Ποσοστο % Skroutz</label>
-                        <select name="pososto_skroutz" id="" class="pososto"
-                        required>
-                            <option value="" disabled>--Select Option--</option>
-                            <option value="0.22" selected>22% με διαφήμιση</option>
-                            <option value="0.20">20% με διαφήμιση</option>
-                            <option value="0.14">14% χωρις διαφήμιση</option>
-                            <option value="0.12">12% με διαφήμιση</option>
-                            <option value="0.09">9% χωρις διαφήμιση</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
 
+      
+      <div class="container">
+        <div class="part1">
+                <table class="table1">
+                    <tr>
+                      <th>Categories</th>
+                      <th>Supply Fee %</th>
+                    </tr>
+                    <tr>
+                      <td>Θηκες , Προστασια, Βάσεις Tablet - Κινητων ,<br> Wearables, Τσαντες Laptop </td>
+                      <td><strong>&nbsp 22% -- Ads &nbsp</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Θηκες , Προστασια, Βάσεις Tablet - Κινητων ,<br> Wearables, Τσαντες Laptop </td>
+                      <td><strong>&nbsp 14% No Ads &nbsp</strong></td>
+                    </tr>
+                      <tr>
+                      <td>Stylus , Ακουστικά Ψείρες,  Handsfree,<br> Αξεσουάρ AirPods , FM Transmitters </td>
+                      <td><strong>&nbsp 12% -- Ads &nbsp</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Stylus , Ακουστικά Ψείρες,  Handsfree,<br> Αξεσουάρ AirPods, FM Transmitters </td>
+                      <td><strong>&nbsp 9% No Ads &nbsp</strong></td>
+                    </tr>
+                      <tr>
+                      <td>Powerbank, Chargers, Αναπτήρα Αυτοκινήτου </td>
+                      <td><strong>&nbsp 16% -- Ads &nbsp</strong></td>
+                    </tr>
+                      <tr>
+                      <td>Powerbank, Chargers, Αναπτήρα Αυτοκινήτου </td>
+                      <td><strong>&nbsp 12% No Ads &nbsp</strong></td>
+                    </tr>
+                </table>
+                <table class="table2">
+                        <tr>
+                          <th>Categories</th>
+                          <th>Supply Fee %</th>
+                        </tr>
+                    <tr>
+                      <td>USB Hub, Bluetooth Adapters, Card Readers </td>
+                      <td><strong>&nbsp 14% -- Ads &nbsp</strong></td>
+                    </tr>
+                    <tr>
+                      <td>USB Hub, Bluetooth Adapters, Card Readers<br> </td>
+                      <td><strong>&nbsp 9% No Ads &nbsp</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Αξεσουάρ AirTag </td>
+                      <td><strong>&nbsp 20% -- Ads &nbsp</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Αξεσουάρ AirTag </td>
+                      <td><strong>&nbsp 14% No Ads &nbsp</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Καλώδια<br> </td>
+                      <td><strong>&nbsp 28% -- Ads &nbsp</strong></td>
+                    </tr>
+                    <tr>
+                      <td>Καλώδια<br> </td>
+                      <td><strong>&nbsp 18% No Ads &nbsp</strong></td>
+                    </tr>    
+                </table>
         </div>
-
-        <div class="calc2">
-            <div class="head2">
-                <div class="title">
-                    <h1>Profit</h1>
+        <div class="part2">
+            
+            <div class="calc">
+                <div class="head">
+                    <div class="title">
+                        <h1>Skroutz Calculator</h1>
+                    </div>
                 </div>
-                <span class="profit1">0</span>
-                <p class="error">12</p>
+            
+                <div class="myForm">
+                    <form action="" class="form1">
+                        <div class="tim_agoras">
+                            <label for="">Τιμ. Αγορας (Χωρις ΦΠΑ):</label>
+                            <input type="text" placeholder="Τιμη Αγορας" class="agora" required>
+                        </div>
+                        <div class="tim_lianikis">
+                            <label for="">Τιμ. Λιανικης (Με ΦΠΑ) :</label>
+                            <input type="text" placeholder="Τιμη Λιανικης" class="lianiki" required>
+                        </div>
+                        <div>
+                            <label for="">Ποσοστο % Skroutz</label>
+                            <select name="pososto_skroutz" id="" class="pososto"
+                            required>
+                                <option value="" disabled>--Select Option--</option>
+                                <option value="0.28">28% Ads</option>
+                                <option value="0.22" selected>22% Ads</option>
+                                <option value="0.20">20% Ads</option>
+                                <option value="0.18">18% No Ads</option>
+                                <option value="0.16">16% Ads</option>
+                                <option value="0.14">14% No Ads</option>
+                                <option value="0.12">12% Ads</option>
+                                <option value="0.09">9% No Ads</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="buttons">
-                <button class="reset" id="red">Reset</button>
-                <Calculate class="btn" id="orange">Calculate</button>
-            </div>
+            <div class="calc2">
+                <div class="head2">
+                    <div class="title">
+                        <h1>Profit</h1>
+                    </div>
+                    <span class="profit1">0</span>
+                    <p class="error">12</p>
+                </div>
+                <div class="buttons">
+                    <button class="reset" id="red">Reset</button>
+                    <Calculate class="btn" id="orange">Calculate</button>
+                </div>
+        </div>
     </div>
     <script src="script.js"></script>
   </body>
