@@ -10,9 +10,10 @@ const input = document.querySelector("input");
 
 function caclProfit (e) {
     e.preventDefault();
-    const lianikiValue = lianiki.value;
+    const lianikiValue = lianiki.value.replace(/,/g, ".");
+    const agoraValue = agora.value.replace(/,/g, ".");
     const posostoValue = pososto.value;
-    const agoraValue = agora.value;
+
 
     const ypol1 = Number(lianikiValue) * Number(-posostoValue);
     const ypol2 = Number(lianikiValue) + Number(ypol1);
