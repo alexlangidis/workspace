@@ -1,6 +1,7 @@
 const agora = document.querySelector(".agora");
 const lianiki = document.querySelector(".lianiki");
 const pososto = document.querySelector(".pososto");
+const fulfilled = document.querySelector('.fulfilled');
 const reset = document.querySelector(".reset");
 const btn = document.querySelector(".btn");
 const profit1 = document.querySelector(".profit1");
@@ -13,13 +14,13 @@ function caclProfit (e) {
     const lianikiValue = lianiki.value.replace(/,/g, ".");
     const agoraValue = agora.value.replace(/,/g, ".");
     const posostoValue = pososto.value;
-
+    const fulfilledValue = fulfilled.value;
 
     const ypol1 = Number(lianikiValue) * Number(-posostoValue);
     const ypol2 = Number(lianikiValue) + Number(ypol1);
     const ypol3 = Number(ypol2 / 1.24);
 
-    const profit = Number(ypol3) - Number(agoraValue);
+    const profit = Number(ypol3) - Number(agoraValue) - Number(fulfilledValue);
     const roundProfit = profit.toFixed(2);
     profit1.innerHTML= `${roundProfit}`;
 

@@ -142,6 +142,10 @@ select{
   cursor: pointer;
 }
 
+#fulfilled_label {
+  margin-right: 5rem;
+}
+
 
 .profit1 {
     border: 2px solid rgb(0, 216, 11);
