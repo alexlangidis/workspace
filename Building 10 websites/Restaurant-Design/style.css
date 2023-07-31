@@ -1,0 +1,121 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+}
+
+header {
+  background-image: url(../Restaurant-Design/images/bg.png);
+  background-size: cover;
+  min-height: 100vh;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  width: 1000px;
+  max-width: 100%;
+  padding: 1rem;
+}
+
+.pre-nav {
+  display: flex;
+  justify-content: space-between;
+  font-size: 2rem;
+}
+
+.logo {
+  color: #026e78;
+  font-weight: bold;
+}
+
+a {
+  text-decoration: none;
+  color: white;
+}
+
+nav {
+  padding: 1rem;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+nav li {
+  flex: 1 auto;
+}
+
+nav li a {
+  padding: 1rem 2rem;
+  display: block;
+  background-color: #2d99a4;
+  text-align: center;
+}
+
+nav a.active {
+  background-color: white;
+  color: #026e78;
+}
+
+nav a.highlight {
+  background-color: #026e78;
+}
+
+nav a:hover {
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.content {
+  margin-top: 5rem;
+  display: flex;
+  flex-direction: column;
+  font-size: 2rem;
+  padding: 1rem;
+}
+
+.ct {
+  padding: 1rem;
+  width: fit-content;
+  font-weight: lighter;
+}
+
+.content h1 {
+  background-color: #026e78;
+  color: white;
+}
+
+.white-link {
+  background-color: white;
+  color: #026e78;
+}
+
+.teal-link {
+  background-color: #2d99a4;
+  color: white;
+  margin-top: 2rem;
+}
+
+@media screen and (max-width: 900px) {
+  header {
+    background-position: center;
+  }
+
+  .pre-nav {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .content {
+    font-size: 1.4rem;
+  }
+}
