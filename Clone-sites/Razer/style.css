@@ -1,0 +1,462 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  background-color: #222;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #eee;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+header {
+  width: 100%;
+  background-color: black;
+  border-bottom: 1px solid #44d62c;
+}
+
+.menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+nav li {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: 20px;
+  padding: 1rem;
+}
+
+nav li:last-child {
+  margin-right: 0;
+}
+
+nav a,
+i {
+  text-decoration: none;
+  color: #999;
+}
+
+nav a:hover,
+i:hover {
+  cursor: pointer;
+  color: #f4f4f4;
+}
+
+.logo img {
+  width: 35px;
+  height: 35px;
+  margin-right: 1rem;
+}
+
+.promo-bar {
+  background-color: #555;
+  padding: 0.1rem;
+  text-align: center;
+  color: #f4f4f4;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.promo-bar a {
+  color: #f4f4f4;
+  text-decoration: none;
+}
+.promo-bar a:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.container-banner {
+  background-position: center center;
+  background-size: cover;
+  height: 700px;
+  width: 100;
+  border-bottom: 10px solid #222;
+}
+
+#banner1 {
+  background-image: url(../Razer/images/kitsune-homepage-large-2x.webp);
+}
+#banner2 {
+  background-image: url(../Razer/images/back-to-school-homepage-desktop2x.webp);
+}
+#banner3 {
+  background-image: url(../Razer/images/razer-esports-line-homepage-desktop2x.webp);
+}
+
+.container-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.container-info h2 {
+  font-size: 3rem;
+  margin-top: 4rem;
+  margin-bottom: 0;
+}
+.container-info h3 {
+  font-size: 1.8rem;
+  font-weight: lighter;
+  padding: 0.3rem;
+  margin: 0;
+}
+
+.cta-links a {
+  color: #f4f4f4;
+  text-decoration: none;
+  padding: 1rem 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+
+.razer-color {
+  color: #44d62c;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  width: 100vw;
+  column-count: 2;
+  column-gap: 10px;
+}
+
+.col {
+  background-position: center center;
+  background-size: cover;
+  height: 600px;
+  width: 50%;
+  border-color: #222;
+  border-style: solid;
+  border-width: 0 0 10px 0;
+}
+
+.column-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.column-info h2 {
+  font-size: 2.5rem;
+  margin-top: 3rem;
+  margin-bottom: 0;
+}
+
+.column-info h3 {
+  font-size: 1.3rem;
+  font-weight: lighter;
+  padding: 0.3rem;
+  margin: 0;
+}
+
+.column-info .cta-links a {
+  font-size: 1rem;
+}
+
+#exclusive {
+  padding: 0.3rem 0.8rem;
+  background-color: #ffc107;
+  font-size: 0.6rem;
+  font-weight: bold;
+  text-align: left;
+  border: none;
+  margin-top: 2rem;
+  margin-bottom: -36px;
+  cursor: pointer;
+}
+
+#exclusive span {
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+#col-banner1 {
+  background-image: url(../Razer/images/razer-blade-14-2023-b-950x580-desktop.webp);
+}
+
+#col-banner2 {
+  background-image: url(../Razer/images/razer-nexus-950x580-desktop.webp);
+}
+
+#col-banner3 {
+  background-image: url(../Razer/images/blackwidow-v4-950x580-desktop.webp);
+}
+
+#col-banner4 {
+  background-image: url(../Razer/images/mercury-blade16-blade18-b-950x580-desktop.webp);
+}
+
+#col-banner5 {
+  background-image: url(../Razer/images/razer-edge-b-950x580-desktop.webp);
+}
+
+#col-banner6 {
+  background-image: url(../Razer/images/honkai-star-rail-webshop-razer-gold-954x580.webp);
+}
+
+/* Footer menu style */
+
+footer {
+  width: 100vw;
+  background-color: #0e0e0e;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-container {
+  width: 1200px;
+  max-width: 100%;
+  display: flex;
+  justify-content: left;
+  margin: 0 auto;
+  border-bottom: 1px solid grey;
+  position: relative;
+}
+
+.footer-header {
+  font-size: 0.9rem;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+
+.col-footer li {
+  list-style: none;
+  line-height: 2rem;
+}
+
+.col-footer li a {
+  text-decoration: none;
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: lighter;
+}
+
+.signature {
+  padding-top: 0.8rem;
+  padding-right: 0.8rem;
+  color: #44d62c;
+  font-size: 0.9rem;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* Bottom legal style */
+
+.legal {
+  display: flex;
+  width: 1200px;
+  max-width: 90%;
+  margin: 1rem auto;
+  align-items: center;
+  position: relative;
+}
+
+.legal p {
+  font-size: 0.7rem;
+  font-weight: lighter;
+  color: #999;
+  padding-right: 1rem;
+}
+
+.legal-menu a,
+.country a {
+  text-decoration: none;
+  padding: 0 1rem;
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.col-footer li a:hover,
+.legal-menu a:hover,
+.country a:hover {
+  color: #f4f4f4;
+  text-decoration: underline;
+}
+
+.legal-menu a:not(:last-child) {
+  border-right: 1px solid #999;
+}
+
+.country .active {
+  color: #f4f4f4;
+  border-right: 1px solid #f4f4f4;
+  padding: 0.1;
+}
+
+.country {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+#mobile {
+  display: none;
+}
+
+#ft-mobile {
+  display: none;
+}
+
+@media screen and (max-width: 1065px) {
+  body {
+    text-align: center;
+  }
+
+  #desktop-logo {
+    display: none;
+  }
+
+  nav ul {
+    display: none;
+  }
+
+  .promo-bar p {
+    padding: 0 1rem;
+  }
+  .row {
+    flex-direction: column;
+  }
+
+  .col {
+    width: 100%;
+  }
+
+  #footer-desktop {
+    display: none;
+  }
+
+  .menu-mobile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+  }
+
+  .menu-mobile i {
+    font-size: 1.5rem;
+  }
+
+  #mobile {
+    display: flex;
+  }
+
+  #ft-mobile {
+    display: flex;
+    padding: 0 2rem;
+    border: 1px solid red;
+  }
+
+  .footer-mob-menu {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid gray;
+  }
+  .footer-mob-menu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(117, 117, 117, 0.486);
+  }
+  .footer-mob-menu-row h4 {
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  .legal-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  .legal-mobile p {
+    font-size: 0.9rem;
+  }
+
+  .legal-menu {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(117, 117, 117, 0.486);
+  }
+  .country-mobile {
+    display: flex;
+    align-items: center;
+  }
+
+  .country-mobile a {
+    text-decoration: none;
+    padding: 0 1rem;
+    font-size: 0.8rem;
+    color: #999;
+  }
+
+  .country-mobile a:hover {
+    color: #f4f4f4;
+    text-decoration: underline;
+  }
+
+  .country-mobile .active {
+    color: #f4f4f4;
+    font-size: 0.8rem;
+    border-right: 1px solid #f4f4f4;
+    padding-right: 0.5rem;
+  }
+
+  .signature-mobile {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .signature-mobile p {
+    color: #44d62c;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+
+  .signature-mobile ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 0;
+    padding: 0;
+  }
+  .signature-mobile li {
+    list-style: none;
+    padding: 0.5rem;
+  }
+
+  .social-mobile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+}
