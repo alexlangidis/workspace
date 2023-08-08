@@ -1,0 +1,116 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
+}
+
+body {
+  background-color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  color: white;
+}
+
+header {
+  background-image: url(../nt-home/images/neflix-background.jpg);
+  background-position: center center;
+  background-size: cover;
+  height: 600px;
+  width: 100%;
+}
+
+.hero-container {
+  background-color: rgba(0, 0, 0, 0.603);
+  height: 100%;
+}
+
+.header-container {
+  width: 1200px;
+  max-width: 100%;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.logo img {
+  height: 100px;
+}
+
+.hero-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 90%;
+}
+
+.hero-form h1 {
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.hero-form h3 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  padding: 1rem;
+}
+
+.form-container {
+  width: 600px;
+  max-width: 100%;
+}
+.form-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 1rem;
+}
+
+.form-control input {
+  background-color: rgba(0, 0, 0, 0.342);
+  padding: 1.2rem;
+  flex: 1;
+  border: 1px solid rgb(146, 146, 146);
+  border-radius: 5px;
+  outline: none;
+}
+
+label {
+  position: absolute;
+  top: 35px;
+  left: 40px;
+  color: rgb(216, 216, 216);
+}
+
+.btn {
+  background-color: rgb(229, 9, 20);
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-weight: 600;
+  padding: 1rem;
+}
+
+.btn:hover {
+  cursor: pointer;
+  background-color: rgb(196, 0, 10);
+}
+
+#btn-get-started {
+  font-size: 1.4rem;
+  margin-left: 1rem;
+}
+
+#btn-sign-in {
+  font-size: 1rem;
+  margin-left: 0.5rem;
+}
