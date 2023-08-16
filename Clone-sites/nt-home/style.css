@@ -10,6 +10,7 @@
 body {
   background-color: black;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin: 0 auto;
@@ -21,12 +22,18 @@ header {
   background-position: center center;
   background-size: cover;
   height: 600px;
+}
+
+header,
+main,
+footer {
   width: 100%;
 }
 
 .hero-container {
   background-color: rgba(0, 0, 0, 0.603);
   height: 100%;
+  border-bottom: 8px solid rgb(35, 35, 35);
 }
 
 .header-container {
@@ -41,6 +48,18 @@ header {
 
 .logo img {
   height: 100px;
+}
+
+.language-select {
+  background-color: transparent;
+  font-size: 1rem;
+  color: white;
+  padding: 0.3rem 1rem;
+  border-radius: 5px;
+}
+
+.language-select:focus-visible {
+  outline: 2px solid white;
 }
 
 .hero-form {
@@ -95,7 +114,7 @@ label {
   background-color: rgb(229, 9, 20);
   border: none;
   border-radius: 5px;
-  color: white;
+  color: rgb(255, 255, 255);
   font-weight: 600;
   padding: 1rem;
 }
@@ -111,6 +130,154 @@ label {
 }
 
 #btn-sign-in {
-  font-size: 1rem;
+  font-size: 0.9rem;
   margin-left: 0.5rem;
+  padding: 0.4rem 1.3rem;
+}
+
+.container {
+  display: flex;
+  width: 1400px;
+  max-width: 100%;
+  margin: 0 auto;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.gap {
+  padding: 20px;
+  border-bottom: 8px solid rgb(35, 35, 35);
+}
+
+.container img {
+  width: 100%;
+}
+
+.container-box-text,
+.container-box-img-video {
+  width: 50%;
+}
+
+.container-box-text h2 {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+}
+
+.container-box-text p {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.faq {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  width: 1400px;
+}
+
+#faq-main-title {
+  font-size: 3rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.faq-item {
+  margin: 0.2rem 2rem;
+}
+
+.faq-title {
+  background-color: #202020;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  padding: 2rem;
+  position: relative;
+}
+
+.faq-title:hover {
+  cursor: pointer;
+  background-color: #3f3f3f;
+}
+
+.faq-title::before {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  font-size: 2rem;
+}
+
+.faq-item.active .faq-title::before {
+  content: "-";
+}
+
+.faq-content {
+  background-color: #202020;
+  border-top: 1px solid black;
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  transition: 0.5s;
+}
+
+.faq-item.active .faq-content {
+  height: auto;
+  padding: 2rem;
+}
+
+.faq-item h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+.faq-item p {
+  font-size: 1.4rem;
+  line-height: 1.4;
+}
+
+.ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ready h3 {
+  font-weight: 400;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.footer-container {
+  display: flex;
+  flex-direction: column;
+  margin: 2rem auto;
+  width: 1400px;
+  max-width: 100%;
+}
+
+.footer-container a {
+  color: rgb(172, 172, 172);
+}
+
+.footer-container li {
+  list-style: none;
+  padding: 0.3rem 0;
+}
+
+.footer-menu {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+  max-width: auto;
+}
+
+.footer-menu-column {
+  width: 25%;
+}
+
+#sign-county-bottom p {
+  margin-top: 1rem;
 }
