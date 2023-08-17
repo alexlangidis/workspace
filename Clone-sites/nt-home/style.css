@@ -242,6 +242,7 @@ label {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 2rem;
 }
 
 .ready h3 {
@@ -256,6 +257,7 @@ label {
   margin: 2rem auto;
   width: 1400px;
   max-width: 100%;
+  padding: 0 2rem;
 }
 
 .footer-container a {
@@ -276,8 +278,87 @@ label {
 
 .footer-menu-column {
   width: 25%;
+  padding-right: 2rem;
 }
 
 #sign-county-bottom p {
   margin-top: 1rem;
+}
+
+@media screen and (max-width: 959px) {
+  .hero-form h1 {
+    font-size: 2.5rem;
+    padding: 1rem;
+  }
+
+  .hero-form h3 {
+    font-size: 1.4rem;
+  }
+
+  .form-container {
+    width: 600px;
+    max-width: 100%;
+  }
+
+  .container {
+    flex-direction: column;
+    padding: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  #watch-offline-column,
+  #kids-profile-column {
+    flex-direction: column-reverse;
+  }
+
+  .container img {
+    width: 100%;
+  }
+
+  .container-box-text,
+  .container-box-img-video {
+    width: 100%;
+    text-align: center;
+    padding: 0 1rem;
+  }
+
+  .container-box-text h2 {
+    font-size: 2rem;
+  }
+
+  .container-box-text p {
+    font-size: 1.2rem;
+  }
+
+  #faq-main-title {
+    font-size: 2rem;
+  }
+
+  .faq-item h2 {
+    font-size: 1.2rem;
+  }
+
+  .faq-item p {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+}
+
+@media screen and (max-width: 730px) {
+  .hero-form h1 {
+    font-size: 2.2rem;
+    padding: 1rem;
+  }
+
+  .hero-form h3 {
+    font-size: 1.2rem;
+  }
+
+  .form-container {
+    width: auto;
+  }
+
+  #btn-get-started {
+    font-size: 1rem;
+  }
 }
