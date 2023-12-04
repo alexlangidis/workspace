@@ -370,7 +370,6 @@ footer {
   #ft-mobile {
     display: flex;
     padding: 0 2rem;
-    border: 1px solid red;
   }
 
   .footer-mob-menu {
