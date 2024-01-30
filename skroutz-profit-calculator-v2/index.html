@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="./src/style.css" rel="stylesheet" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="./src/script.js" defer></script>
+  </head>
+  <body
+    class="flex flex-col items-center justify-center w-full lg:overflow-hidden md:h-screen bg-slate-200"
+  >
+    <h1 class="mt-10 mb-8 text-3xl font-bold text-center lg:mt-0">
+      <span class="text-orange-500">Skroutz</span> Profit Calculator
+      <span class="text-orange-500">v2.0</span>
+    </h1>
+    <div
+      class="container flex flex-col-reverse items-center justify-center gap-4 p-4 md:flex-row"
+    >
+      <div
+        class="bg-gray-700 part1 w-full max-w-[600px] h-full p-10 flex flex-col justify-center items-center rounded-xl"
+      >
+        <h2 class="text-4xl font-semibold text-white">Profit</h2>
+        <span
+          class="p-4 px-10 my-8 text-3xl text-white border-2 border-orange-500 border-solid rounded-md"
+          id="profit"
+          >0</span
+        >
+        <p class="error"></p>
+        <div class="flex gap-8 mt-4 part1-btn">
+          <button
+            class="p-4 text-2xl font-bold text-white bg-red-600 rounded-lg hover:opacity-90"
+            id="btn_reset"
+          >
+            Reset
+          </button>
+          <button
+            class="p-4 text-2xl font-bold text-white bg-orange-600 rounded-lg hover:opacity-90"
+            id="btn_calc"
+          >
+            Calculate
+          </button>
+        </div>
+        <div class="mt-8 text-lg">
+          <a
+            href="./skroutz-fees.html"
+            target="_blank"
+            class="italic font-bold text-orange-400"
+          >
+            Skroutz Fees &nbsp;
+            <i class="fa-solid fa-arrow-up-right-from-square"></i
+          ></a>
+        </div>
+      </div>
+
+      <div
+        class="bg-gray-700 part2 w-full max-w-[600px] h-full p-10 flex flex-col justify-center items-center rounded-xl"
+      >
+        <h2
+          class="p-4 text-4xl font-semibold text-white border-orange-400 border-b-[1px] mb-4 text-center"
+        >
+          <span class="text-orange-500">Skroutz</span> Calculator
+        </h2>
+
+        <div class="w-full myForm">
+          <form id="form">
+            <div
+              class="flex flex-col items-center justify-evenly tim__agoras lg:flex-row"
+            >
+              <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
+                Τιμ. Αγορας (Χωρις ΦΠΑ):
+              </label>
+              <input
+                type="number"
+                placeholder="Τιμη Αγορας"
+                class="max-w-[200px] p-4 text-center rounded-lg lg:p-2 lg:py-4"
+                id="agora"
+              />
+            </div>
+            <div class="line border-orange-400 border-t-[1px] my-4"></div>
+            <div
+              class="flex flex-col items-center justify-evenly tim__lianikis lg:flex-row"
+            >
+              <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
+                Τιμ. Λιανικης (Με ΦΠΑ) :
+              </label>
+              <input
+                type="number"
+                placeholder="Τιμη Αγορας"
+                class="max-w-[200px] p-4 text-center rounded-lg lg:p-2 lg:py-4"
+                id="lianiki"
+              />
+            </div>
+            <div class="line border-orange-400 border-t-[1px] my-4"></div>
+            <div
+              class="flex flex-col items-center justify-evenly pososto__skroutz lg:flex-row"
+            >
+              <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
+                Ποσοστο % Skroutz
+              </label>
+              <select
+                name=""
+                id="pososto"
+                class="p-4 text-center rounded-lg max-w-[200px] w-full"
+                required
+              >
+                <option value="" disabled>--Select Option--</option>
+                <option value="0.2350" selected>23.50%</option>
+                <option value="0.20">20.00%</option>
+                <option value="0.18">18.00%</option>
+                <option value="0.16">16.00%</option>
+                <option value="0.145">14.50%</option>
+                <option value="0.140">14.00%</option>
+                <option value="0.125">12.50%</option>
+                <option value="0.105">10.50%</option>
+                <option value="0.095">9.50%</option>
+              </select>
+            </div>
+
+            <div
+              class="flex flex-col items-center mt-4 justify-evenly pososto__skroutz lg:flex-row"
+            >
+              <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
+                Fulfilled by Skroutz
+              </label>
+              <select
+                name=""
+                id="fulfilled"
+                class="p-4 text-center rounded-lg max-w-[200px] w-full"
+                required
+              >
+                <option value="" selected>No Fulfilled</option>
+                <option value="0.35">0.25 + 0.10 coins</option>
+                <option value="0.60">0.50 + 0.10 coins</option>
+                <option value="1.10">1 + 0.10 coins</option>
+                <option value="2.10">2 + 0.10 coins</option>
+                <option value="0.25">0.25</option>
+                <option value="0.50">0.50</option>
+                <option value="1">1.00</option>
+                <option value="2">2.00</option>
+              </select>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
