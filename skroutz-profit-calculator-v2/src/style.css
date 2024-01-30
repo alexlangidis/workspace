@@ -657,6 +657,14 @@ video {
   max-width: 800px;
 }
 
+.max-w-\[1000px\] {
+  max-width: 1000px;
+}
+
+.max-w-\[1200px\] {
+  max-width: 1200px;
+}
+
 .flex-col {
   flex-direction: column;
 }
@@ -683,6 +691,10 @@ video {
 
 .gap-8 {
   gap: 2rem;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
 }
 
 .whitespace-nowrap {
@@ -960,6 +972,10 @@ input[type="number"] {
   display: none;
   color: red;
   text-align: center;
+}
+
+.hover\:underline:hover {
+  text-decoration-line: underline;
 }
 
 .hover\:opacity-90:hover {
