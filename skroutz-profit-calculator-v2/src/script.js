@@ -11,7 +11,8 @@ $(document).ready(function () {
     const ypol2 = Number(lianikiValue) + Number(ypol1);
     const ypol3 = Number(ypol2 / 1.24);
 
-    const profit = Number(ypol3) - Number(agoraValue) - Number(fulfilledValue);
+    const profit =
+      Number(ypol3) - Number(agoraValue) - Number(fulfilledValue / 1.24);
     const roundProfit = profit.toFixed(2);
     $("#profit").html(`${roundProfit}`);
 
