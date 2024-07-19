@@ -7,15 +7,39 @@ $(document).ready(function () {
     const posostoValue = $("#pososto").val();
     const fulfilledValue = $("#fulfilled").val();
 
-    const ypol1 = Number(lianikiValue) * Number(-posostoValue);
-    const ypol2 = Number(lianikiValue) + Number(ypol1);
-    const ypol3 = Number(ypol2 / 1.24);
+    if (isNaN(agoraValue) || isNaN(lianikiValue)) {
+      $(".error").css("display", "flex");
+      $(".error").html(`Βαλτε Τιμ. Αγορας & Τιμ. Λιανικης`);
+      return;
+    }
 
-    const profit =
-      Number(ypol3) - Number(agoraValue) - Number(fulfilledValue / 1.24);
-    const roundProfit = profit.toFixed(2);
-    $("#profit").html(`${roundProfit}`);
+    if ($("#checked-checkbox").is(":checked")) {
+      const deals2 = Math.abs(Number(lianikiValue * 0.05 - lianikiValue));
+      const ypol1 = Number(deals2) * Number(-posostoValue);
+      const ypol2 = Number(deals2) + Number(ypol1);
+      const ypol3 = Number(ypol2 / 1.24);
 
+      const profit =
+        Number(ypol3) - Number(agoraValue) - Number(fulfilledValue / 1.24);
+      const roundProfit = profit.toFixed(2);
+      $("#profit").html(`${roundProfit}`);
+
+      checkProfit(roundProfit, lianikiValue, agoraValue);
+    } else {
+      const ypol1 = Number(lianikiValue) * Number(-posostoValue);
+      const ypol2 = Number(lianikiValue) + Number(ypol1);
+      const ypol3 = Number(ypol2 / 1.24);
+
+      const profit =
+        Number(ypol3) - Number(agoraValue) - Number(fulfilledValue / 1.24);
+      const roundProfit = profit.toFixed(2);
+      $("#profit").html(`${roundProfit}`);
+
+      checkProfit(roundProfit, lianikiValue, agoraValue);
+    }
+  }
+
+  function checkProfit(roundProfit, lianikiValue, agoraValue) {
     if (lianikiValue === "" || agoraValue === "") {
       $(".error").css("display", "flex");
       $(".error").html(`Βαλτε Τιμ. Αγορας & Τιμ. Λιανικης`);
