@@ -136,7 +136,7 @@ button {
 .currency-symbol {
   position: absolute;
   left: 10px;
-  top: 40%;
+  top: 38%;
   transform: translateY(-50%);
   color: rgb(16, 141, 0);
   pointer-events: none;

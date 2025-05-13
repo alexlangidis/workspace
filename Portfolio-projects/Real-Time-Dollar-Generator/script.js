@@ -54,3 +54,12 @@ counterReset.addEventListener("click", () => {
   earnings = 0;
   counterValue.textContent = "$0.00";
 });
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    counterStart.click();
+  }
+  if (event.key === " ") {
+    counterStop.click();
+  }
+});
