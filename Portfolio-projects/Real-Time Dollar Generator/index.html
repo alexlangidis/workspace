@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="./script.js" defer></script>
+    <title>Real-Time Dollar Generator – $/Sec</title>
+  </head>
+  <body>
+    <!-- 💵 Input with Dollar Sign -->
+    <div class="test">
+      <div class="input-wrapper">
+        <span class="currency-symbol">$</span>
+        <input type="number" class="amount__value" placeholder="Enter amount" />
+      </div>
+
+      <!-- ⏳ Time period selector -->
+      <select class="time__select">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+    </div>
+
+    <!-- 📈 Counter Display -->
+    <div class="counter">
+      <div class="counter__title">Real-Time Dollar Generator – $/Sec</div>
+      <span class="counter__value">$0.00</span>
+      <button class="counter__reset-button">
+        <i class="fas fa-sync-alt counter__reset-icon"></i>
+      </button>
+      <div class="counter__buttons">
+        <button class="counter__button counter__button--stop">Stop</button>
+        <button class="counter__button counter__button--start">Start</button>
+      </div>
+    </div>
+  </body>
+</html>

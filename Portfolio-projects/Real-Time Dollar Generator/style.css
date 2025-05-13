@@ -1,0 +1,184 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  height: 100vh;
+  background-image: radial-gradient(ellipse, #00cca0, #005229);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.amount__value,
+.time__select {
+  width: 50%;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: rgb(16, 141, 0);
+  background-color: rgb(123, 216, 139);
+  width: 250px;
+}
+
+.amount__value::placeholder {
+  color: rgb(16, 141, 0);
+}
+
+.counter {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  background-color: rgb(123, 216, 139);
+  width: 500px;
+  height: 615px;
+  border-radius: 12px;
+}
+
+.counter__title {
+  opacity: 0.6;
+  letter-spacing: 1px;
+  line-height: 1.2; /* keep this one */
+  text-align: center;
+  width: 400px;
+  margin-top: 60px;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.counter__value {
+  color: rgb(16, 141, 0);
+  font-size: 4rem;
+  font-weight: bold;
+  margin: 100px;
+}
+
+button {
+  all: unset;
+}
+
+.counter__reset-button {
+  cursor: pointer;
+}
+
+.counter__reset-icon {
+  opacity: 0.3;
+  font-size: 3rem;
+  transition: all 0.4s;
+}
+
+.counter__reset-icon:hover {
+  opacity: 0.6;
+}
+
+.counter__button {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.4s;
+}
+
+.counter__button:hover {
+  background-color: #00831c;
+  cursor: pointer;
+}
+
+.counter__buttons {
+  display: flex;
+  background-color: #047700;
+  height: 116px;
+  width: 100%;
+  margin-top: auto;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  font-size: 2rem;
+  color: white;
+  font-weight: bold;
+}
+
+.counter__icon {
+  color: yellowgreen;
+  opacity: 0.9;
+  font-size: 4rem;
+}
+
+.counter__button--start {
+  border-left: 1px solid wheat;
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 10px;
+  top: 40%;
+  transform: translateY(-50%);
+  color: rgb(16, 141, 0);
+  pointer-events: none;
+  font-size: 2rem;
+}
+
+.amount__value {
+  padding-left: 35px; /* enough space for the $ symbol */
+}
+
+@media (max-width: 680px) {
+  .counter {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+  .counter__buttons {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .amount__value,
+  .time__select {
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    color: rgb(16, 141, 0);
+    background-color: rgb(123, 216, 139);
+    width: 100%;
+  }
+
+  .currency-symbol {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgb(16, 141, 0);
+    pointer-events: none;
+    font-size: 2rem;
+  }
+}
