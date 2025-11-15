@@ -1130,3 +1130,13 @@ input[type="number"] {
     color: rgb(255 255 255 / var(--tw-text-opacity));
   }
 }
+
+input[type="checkbox"] {
+  accent-color: #f97316;
+  /* Ensure checked state matches the orange theme */
+}
+
+input[type="checkbox"],
+select {
+  cursor: pointer;
+}

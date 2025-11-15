@@ -56,13 +56,23 @@
         </div>
         <div class="mt-8 text-lg">
           <a
-            href="./skroutz-fees.html"
+            href="./skroutz-fees-without-ads.html"
             target="_blank"
             class="italic font-bold text-orange-400"
           >
-            Skroutz Fees &nbsp;
-            <i class="fa-solid fa-arrow-up-right-from-square"></i
-          ></a>
+            Skroutz Fees (Without Ads) &nbsp;
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
+        <div class="mt-2 text-lg">
+          <a
+            href="./skroutz-fees-with-ads.html"
+            target="_blank"
+            class="italic font-bold text-orange-400"
+          >
+            Skroutz Fees (With Ads) &nbsp;
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
         </div>
       </div>
 
@@ -108,55 +118,58 @@
             <div
               class="flex flex-col items-center justify-evenly pososto__skroutz lg:flex-row"
             >
-              <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
-                Ποσοστο % Skroutz
-              </label>
+              <div class="flex flex-col gap-3 items-center lg:items-start">
+                <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
+                  Ποσοστο % Skroutz
+                </label>
+                <label
+                  for="ads-toggle"
+                  class="inline-flex items-center gap-2 text-white text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    id="ads-toggle"
+                    class="w-4 h-4 text-orange-500 bg-white border rounded focus:ring-orange-400 focus:ring-2"
+                  />
+                  With Ads
+                </label>
+              </div>
               <select
                 name=""
                 id="pososto"
                 class="p-4 text-center rounded-lg max-w-[200px] w-full"
                 required
-              >
-                <option value="" disabled>--Select Option--</option>
-                <option value="0.285" selected>28.50%</option>
-                <option value="0.28">28.00%</option>
-                <option value="0.26">26.00%</option>
-                <option value="0.22">22.00%</option>
-                <option value="0.20">20.00%</option>
-                <option value="0.18">18.00%</option>
-                <option value="0.16">16.00%</option>
-                <option value="0.155">15.50%</option>
-                <option value="0.145">14.50%</option>
-              </select>
+              ></select>
             </div>
 
             <div
               class="flex flex-col items-center mt-4 justify-evenly pososto__skroutz lg:flex-row"
             >
-              <label
-                class="my-4 text-lg text-white lg:my-0 lg:text-[1rem] text-center"
-              >
-                Διαχειριστικό κόστος<br />
-                Fulfilled by Skroutz
-              </label>
+              <div class="flex flex-col gap-3 items-center lg:items-start">
+                <label
+                  class="my-4 text-lg text-white lg:my-0 lg:text-[1rem] text-center"
+                >
+                  Διαχειριστικό κόστος
+                </label>
+                <label
+                  for="coins-toggle"
+                  class="inline-flex items-center gap-2 text-white text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    id="coins-toggle"
+                    class="w-4 h-4 text-orange-500 bg-white border rounded focus:ring-orange-400 focus:ring-2"
+                    checked
+                  />
+                  With Coins
+                </label>
+              </div>
               <select
                 name=""
                 id="fulfilled"
                 class="p-4 text-center rounded-lg max-w-[200px] w-full"
                 required
-              >
-                <option value="">No Cost / No Coins</option>
-                <option value="0.10">0.10 skroutz coins</option>
-                <option value="0.35" selected>0.25 + 0.10 coins</option>
-                <option value="0.60">0.50 + 0.10 coins</option>
-                <option value="1.10">1.00 + 0.10 coins</option>
-                <option value="2.10">2.00 + 0.10 coins</option>
-
-                <option value="0.25">0.25</option>
-                <option value="0.50">0.50</option>
-                <option value="1">1.00</option>
-                <option value="2">2.00</option>
-              </select>
+              ></select>
             </div>
 
             <div
