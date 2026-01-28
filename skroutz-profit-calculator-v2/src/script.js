@@ -6,13 +6,12 @@ $(document).ready(function () {
 
   const withoutAdsOptions = [
     { value: "0.2", label: "20.00%" },
+    { value: "0.185", label: "18.50%" },
     { value: "0.18", label: "18.00%" },
-    { value: "0.17", label: "17.00%" },
-    { value: "0.16", label: "16.00%" },
-    { value: "0.14", label: "14.00%" },
+    { value: "0.165", label: "16.50%" },
+    { value: "0.145", label: "14.50%" },
     { value: "0.13", label: "13.00%" },
-    { value: "0.12", label: "12.00%" },
-    { value: "0.105", label: "10.50%" },
+    { value: "0.11", label: "11.00%" },
   ];
 
   const withAdsOptions = [
@@ -26,18 +25,16 @@ $(document).ready(function () {
 
   const coinsFulfilledOptions = [
     { value: "", label: "No Cost / No Coins" },
-    { value: "0.35", label: "0.25 + 0.10 coins" },
-    { value: "0.60", label: "0.50 + 0.10 coins" },
-    { value: "1.10", label: "1.00 + 0.10 coins" },
-    { value: "2.10", label: "2.00 + 0.10 coins" },
+    { value: "0.50", label: "0.40 + 0.10 coins" },
+    { value: "0.85", label: "0.75 + 0.10 coins" },
+    { value: "1.30", label: "1.20 + 0.10 coins" },
   ];
 
   const noCoinsFulfilledOptions = [
     { value: "", label: "No Cost / No Coins" },
-    { value: "0.25", label: "0.25" },
-    { value: "0.50", label: "0.50" },
-    { value: "1", label: "1.00" },
-    { value: "2", label: "2.00" },
+    { value: "0.40", label: "0.40" },
+    { value: "0.75", label: "0.75" },
+    { value: "1.20", label: "1.20" },
   ];
 
   const loadSelectOptions = (selectElement, options, defaultValue) => {
@@ -53,21 +50,21 @@ $(document).ready(function () {
 
   const refreshOptions = () => {
     const useAds = adsToggle.is(":checked");
-    const defaultValue = useAds ? "0.26" : "0.16";
+    const defaultValue = useAds ? "0.26" : "0.165";
     loadSelectOptions(
       posostoSelect,
       useAds ? withAdsOptions : withoutAdsOptions,
-      defaultValue
+      defaultValue,
     );
   };
 
   const refreshFulfilledOptions = () => {
     const useCoins = coinsToggle.is(":checked");
-    const defaultValue = useCoins ? "0.35" : "0.25";
+    const defaultValue = useCoins ? "0.50" : "0.40";
     loadSelectOptions(
       fulfilledSelect,
       useCoins ? coinsFulfilledOptions : noCoinsFulfilledOptions,
-      defaultValue
+      defaultValue,
     );
   };
 

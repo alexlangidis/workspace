@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -102,12 +102,36 @@
         </tbody>
       </table>
     </div>
-    <div>
-      <img
-        src="./kostos.webp"
-        alt=""
-        class="lg:max-h-[800px] lg:max-w-[800px] lg:p-0 md:max-h-full md:max-w-full md:px-10 justify-center items-center"
-      />
+    <div class="mx-8 mt-8 text-center space-y-4">
+      <p
+        class="text-sm font-semibold uppercase tracking-[0.3em] text-orange-600"
+      >
+        Open images in a new tab
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <button
+          type="button"
+          data-image="./20260119093042_7955be5a.png"
+          class="px-6 py-3 text-white uppercase transition rounded-full bg-orange-600 hover:bg-orange-500"
+        >
+          Αποστολες σε Ελλαδα
+        </button>
+        <button
+          type="button"
+          data-image="./20260121111940_8c28218c.webp"
+          class="px-6 py-3 text-white uppercase transition rounded-full bg-orange-600 hover:bg-orange-500"
+        >
+          Αποστολες στο Εξωτερικο
+        </button>
+      </div>
     </div>
+    <script>
+      document.querySelectorAll("[data-image]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const imageUrl = button.getAttribute("data-image");
+          window.open(imageUrl, "_blank");
+        });
+      });
+    </script>
   </body>
 </html>
