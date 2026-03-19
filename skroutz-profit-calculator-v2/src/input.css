@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -71,7 +71,7 @@ input[type="number"] {
   max-width: none;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .calculator-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 220px);
     column-gap: 1rem;
@@ -88,3 +88,4 @@ input[type="number"] {
     max-width: 220px;
   }
 }
+
