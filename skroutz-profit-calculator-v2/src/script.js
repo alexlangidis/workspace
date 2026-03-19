@@ -1,8 +1,11 @@
-$(document).ready(function () {
+﻿$(document).ready(function () {
   const posostoSelect = $("#pososto");
   const adsToggle = $("#ads-toggle");
   const fulfilledSelect = $("#fulfilled");
+  const fulfilledAutoToggle = $("#fulfilled-auto-toggle");
   const coinsToggle = $("#coins-toggle");
+  const lianikiInput = $("#lianiki");
+  let autoFulfilledSyncEnabled = true;
 
   const withoutAdsOptions = [
     { value: "0.2", label: "20.00%" },
@@ -48,6 +51,40 @@ $(document).ready(function () {
     }
   };
 
+  const getDefaultFulfilledValue = () =>
+    coinsToggle.is(":checked") ? "0.50" : "0.40";
+
+  const getAutoFulfilledValue = () =>
+    coinsToggle.is(":checked") ? "0.85" : "0.75";
+
+  const renderAutoFulfilledToggle = () => {
+    fulfilledAutoToggle.text(
+      autoFulfilledSyncEnabled ? "Auto change: ON" : "Auto change: OFF",
+    );
+    fulfilledAutoToggle.attr("aria-pressed", String(autoFulfilledSyncEnabled));
+    fulfilledAutoToggle.toggleClass("bg-orange-600", autoFulfilledSyncEnabled);
+    fulfilledAutoToggle.toggleClass("bg-red-600", !autoFulfilledSyncEnabled);
+  };
+
+  const syncFulfilledOptionByPrice = () => {
+    if (!autoFulfilledSyncEnabled) {
+      return;
+    }
+
+    const lianikiValue = Number.parseFloat(
+      String(lianikiInput.val() || "").replace(/,/g, "."),
+    );
+
+    if (Number.isNaN(lianikiValue)) {
+      fulfilledSelect.val(getDefaultFulfilledValue());
+      return;
+    }
+
+    fulfilledSelect.val(
+      lianikiValue >= 20 ? getAutoFulfilledValue() : getDefaultFulfilledValue(),
+    );
+  };
+
   const refreshOptions = () => {
     const useAds = adsToggle.is(":checked");
     const defaultValue = useAds ? "0.26" : "0.165";
@@ -59,23 +96,49 @@ $(document).ready(function () {
   };
 
   const refreshFulfilledOptions = () => {
-    const useCoins = coinsToggle.is(":checked");
-    const defaultValue = useCoins ? "0.50" : "0.40";
-    loadSelectOptions(
-      fulfilledSelect,
-      useCoins ? coinsFulfilledOptions : noCoinsFulfilledOptions,
-      defaultValue,
-    );
+    const previousValue = fulfilledSelect.val();
+    const options = coinsToggle.is(":checked")
+      ? coinsFulfilledOptions
+      : noCoinsFulfilledOptions;
+
+    loadSelectOptions(fulfilledSelect, options, getDefaultFulfilledValue());
+
+    if (autoFulfilledSyncEnabled) {
+      syncFulfilledOptionByPrice();
+      return;
+    }
+
+    if (options.some(({ value }) => value === previousValue)) {
+      fulfilledSelect.val(previousValue);
+    }
   };
 
   adsToggle.on("change", refreshOptions);
   coinsToggle.on("change", refreshFulfilledOptions);
+  fulfilledAutoToggle.on("click", () => {
+    autoFulfilledSyncEnabled = !autoFulfilledSyncEnabled;
+    renderAutoFulfilledToggle();
+
+    if (autoFulfilledSyncEnabled) {
+      syncFulfilledOptionByPrice();
+    }
+  });
+  lianikiInput.on("input change", () => {
+    if (autoFulfilledSyncEnabled) {
+      syncFulfilledOptionByPrice();
+    }
+  });
 
   refreshOptions();
   refreshFulfilledOptions();
+  renderAutoFulfilledToggle();
 
   function caclProfit(e) {
     e.preventDefault();
+
+    if (autoFulfilledSyncEnabled) {
+      syncFulfilledOptionByPrice();
+    }
 
     const agoraValue = $("#agora").val().replace(/,/g, ".");
     const lianikiValue = $("#lianiki").val().replace(/,/g, ".");
@@ -139,7 +202,11 @@ $(document).ready(function () {
 
   $("#btn_reset").click(function (e) {
     e.preventDefault();
+    autoFulfilledSyncEnabled = true;
     $("#form")[0].reset();
+    refreshOptions();
+    refreshFulfilledOptions();
+    renderAutoFulfilledToggle();
     $("#profit").html("0");
   });
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -31,7 +31,7 @@
       class="container flex flex-col-reverse items-center justify-center gap-4 p-4 md:flex-row"
     >
       <div
-        class="bg-gray-700 part1 w-full max-w-[600px] h-full p-10 flex flex-col justify-center items-center rounded-2xl shadow-2xl"
+        class="bg-gray-700 part1 w-full max-w-[500px] h-full p-10 flex flex-col justify-center items-center rounded-2xl shadow-2xl"
       >
         <h2 class="text-4xl font-semibold text-white">Profit</h2>
         <span
@@ -97,39 +97,53 @@
         </h2>
 
         <div class="w-full myForm">
-          <form id="form">
+          <form id="form" class="w-full">
             <div
-              class="flex flex-col items-center justify-evenly tim__agoras lg:flex-row"
+              class="calculator-row flex flex-col items-center justify-evenly tim__agoras lg:flex-row"
             >
-              <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
-                Τιμ. Αγορας (Χωρις ΦΠΑ):
-              </label>
-              <input
-                type="number"
-                placeholder="Τιμη Αγορας"
-                class="max-w-[200px] p-4 text-center rounded-lg lg:p-2 lg:py-4"
-                id="agora"
-              />
+              <div
+                class="calculator-label-group flex flex-col gap-3 items-center lg:items-start"
+              >
+                <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
+                  Τιμ. Αγορας (Χωρις ΦΠΑ):
+                </label>
+              </div>
+              <div class="calculator-control-group">
+                <input
+                  type="number"
+                  placeholder="Τιμη Αγορας"
+                  class="w-full p-4 text-center rounded-lg lg:p-2 lg:py-4"
+                  id="agora"
+                />
+              </div>
             </div>
             <div class="line border-orange-400 border-t-[1px] my-4"></div>
             <div
-              class="flex flex-col items-center justify-evenly tim__lianikis lg:flex-row"
+              class="calculator-row flex flex-col items-center justify-evenly tim__lianikis lg:flex-row"
             >
-              <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
-                Τιμ. Λιανικης (Με ΦΠΑ) :
-              </label>
-              <input
-                type="number"
-                placeholder="Τιμη Αγορας"
-                class="max-w-[200px] p-4 text-center rounded-lg lg:p-2 lg:py-4"
-                id="lianiki"
-              />
+              <div
+                class="calculator-label-group flex flex-col gap-3 items-center lg:items-start"
+              >
+                <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
+                  Τιμ. Λιανικης (Με ΦΠΑ) :
+                </label>
+              </div>
+              <div class="calculator-control-group">
+                <input
+                  type="number"
+                  placeholder="Τιμη Αγορας"
+                  class="w-full p-4 text-center rounded-lg lg:p-2 lg:py-4"
+                  id="lianiki"
+                />
+              </div>
             </div>
             <div class="line border-orange-400 border-t-[1px] my-4"></div>
             <div
-              class="flex flex-col items-center justify-evenly pososto__skroutz lg:flex-row"
+              class="calculator-row flex flex-col items-center justify-evenly pososto__skroutz lg:flex-row"
             >
-              <div class="flex flex-col gap-3 items-center lg:items-start">
+              <div
+                class="calculator-label-group flex flex-col gap-3 items-center lg:items-start"
+              >
                 <label class="my-4 text-lg text-white lg:my-0 lg:text-[1rem]">
                   Ποσοστο % Skroutz
                 </label>
@@ -145,18 +159,22 @@
                   With Ads
                 </label>
               </div>
-              <select
-                name=""
-                id="pososto"
-                class="p-4 text-center rounded-lg max-w-[200px] w-full"
-                required
-              ></select>
+              <div class="calculator-control-group">
+                <select
+                  name=""
+                  id="pososto"
+                  class="w-full p-4 text-center rounded-lg"
+                  required
+                ></select>
+              </div>
             </div>
 
             <div
-              class="flex flex-col items-center mt-4 justify-evenly pososto__skroutz lg:flex-row"
+              class="calculator-row flex flex-col items-center mt-4 justify-evenly pososto__skroutz lg:flex-row"
             >
-              <div class="flex flex-col gap-3 items-center lg:items-start">
+              <div
+                class="calculator-label-group flex flex-col gap-3 items-center lg:items-start"
+              >
                 <label
                   class="my-4 text-lg text-white lg:my-0 lg:text-[1rem] text-center"
                 >
@@ -175,12 +193,21 @@
                   With Coins
                 </label>
               </div>
-              <select
-                name=""
-                id="fulfilled"
-                class="p-4 text-center rounded-lg max-w-[200px] w-full"
-                required
-              ></select>
+              <div class="calculator-control-stack">
+                <select
+                  name=""
+                  id="fulfilled"
+                  class="w-full p-4 text-center rounded-lg"
+                  required
+                ></select>
+                <button
+                  type="button"
+                  id="fulfilled-auto-toggle"
+                  class="w-full px-4 py-2 text-sm font-bold text-white bg-orange-600 rounded-lg hover:opacity-90"
+                >
+                  Auto change: ON
+                </button>
+              </div>
             </div>
 
             <div

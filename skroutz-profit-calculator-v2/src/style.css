@@ -1140,3 +1140,61 @@ input[type="checkbox"],
 select {
   cursor: pointer;
 }
+
+/* Calculator layout refinements */
+.calculator-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  align-items: center;
+}
+
+.calculator-label-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  width: 100%;
+}
+
+.calculator-control-group,
+.calculator-control-stack {
+  width: 100%;
+  min-width: 0;
+}
+
+.calculator-control-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calculator-control-group > input,
+.calculator-control-group > select,
+.calculator-control-group > button,
+.calculator-control-stack > input,
+.calculator-control-stack > select,
+.calculator-control-stack > button {
+  width: 100%;
+  max-width: none;
+}
+
+@media (min-width: 1024px) {
+  .calculator-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 220px);
+    column-gap: 1rem;
+  }
+
+  .calculator-label-group {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .calculator-control-group,
+  .calculator-control-stack {
+    justify-self: end;
+    max-width: 220px;
+  }
+}
