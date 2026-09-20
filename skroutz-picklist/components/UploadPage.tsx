@@ -29,7 +29,13 @@ export default function UploadPage() {
       const formData = new FormData();
       formData.append("file", file);
       const response = await fetch("/api/parse-pdf", { method: "POST", body: formData });
-      const result = (await response.json()) as ParseResponse;
+      const responseText = await response.text();
+      let result: ParseResponse = {};
+      try {
+        result = responseText ? (JSON.parse(responseText) as ParseResponse) : {};
+      } catch {
+        throw new Error(`Ο server δεν επέστρεψε έγκυρη απάντηση (${response.status}). Έλεγξε τα Vercel Function Logs.`);
+      }
       if (!response.ok || !result.products?.length) {
         throw new Error(result.error || "Δεν βρέθηκαν προϊόντα στο PDF.");
       }

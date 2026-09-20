@@ -1,7 +1,5 @@
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-import path from "node:path";
 import { deflateSync } from "node:zlib";
-import { pathToFileURL } from "node:url";
 import type { Product } from "@/types/product";
 
 type TextItem = {
@@ -335,7 +333,8 @@ async function getPdfDocument(data: Uint8Array) {
   // PDF.js v5 uses its fake worker in Node. Point it at the installed local worker so
   // Next's bundled route handler can load it without a browser-served worker asset.
   if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(path.join(process.cwd(), "node_modules", "pdfjs-dist", "legacy", "build", "pdf.worker.mjs")).href;
+    const workerPath = await import.meta.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
   }
   const loadingTask = pdfjsLib.getDocument({
     data,
