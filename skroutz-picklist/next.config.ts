@@ -2,12 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ["pdfjs-dist", "@napi-rs/canvas"],
+  serverExternalPackages: ["pdfjs-dist"],
   outputFileTracingIncludes: {
-    "/api/parse-pdf": [
-      "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
-      "./node_modules/@napi-rs/canvas/**/*",
-    ],
+    "/api/parse-pdf": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
   },
 };
 

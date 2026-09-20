@@ -1,6 +1,146 @@
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { deflateSync } from "node:zlib";
 import type { Product } from "@/types/product";
+
+type PdfJsApi = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
+
+let pdfjsPromise: Promise<PdfJsApi> | undefined;
+
+type MatrixInit = number[] | {
+  a?: number;
+  b?: number;
+  c?: number;
+  d?: number;
+  e?: number;
+  f?: number;
+};
+
+class PdfDomMatrixPolyfill {
+  a = 1;
+  b = 0;
+  c = 0;
+  d = 1;
+  e = 0;
+  f = 0;
+  is2D = true;
+
+  constructor(init?: MatrixInit) {
+    if (Array.isArray(init) && init.length >= 6) {
+      [this.a, this.b, this.c, this.d, this.e, this.f] = init;
+    } else if (init) {
+      Object.assign(this, init);
+    }
+  }
+
+  get m11() { return this.a; }
+  get m12() { return this.b; }
+  get m21() { return this.c; }
+  get m22() { return this.d; }
+  get m41() { return this.e; }
+  get m42() { return this.f; }
+  get isIdentity() { return this.a === 1 && this.b === 0 && this.c === 0 && this.d === 1 && this.e === 0 && this.f === 0; }
+
+  translate(tx = 0, ty = 0) {
+    return new PdfDomMatrixPolyfill([this.a, this.b, this.c, this.d, this.e + tx, this.f + ty]);
+  }
+
+  translateSelf(tx = 0, ty = 0) {
+    this.e += tx;
+    this.f += ty;
+    return this;
+  }
+
+  scale(scaleX = 1, scaleY = scaleX) {
+    return new PdfDomMatrixPolyfill([this.a * scaleX, this.b * scaleX, this.c * scaleY, this.d * scaleY, this.e, this.f]);
+  }
+
+  scaleSelf(scaleX = 1, scaleY = scaleX) {
+    this.a *= scaleX;
+    this.b *= scaleX;
+    this.c *= scaleY;
+    this.d *= scaleY;
+    return this;
+  }
+
+  multiply() {
+    return new PdfDomMatrixPolyfill([this.a, this.b, this.c, this.d, this.e, this.f]);
+  }
+
+  multiplySelf() {
+    return this;
+  }
+
+  preMultiplySelf() {
+    return this;
+  }
+
+  invertSelf() {
+    const determinant = this.a * this.d - this.b * this.c;
+    if (determinant === 0) return this;
+    const { a, b, c, d, e, f } = this;
+    this.a = d / determinant;
+    this.b = -b / determinant;
+    this.c = -c / determinant;
+    this.d = a / determinant;
+    this.e = (c * f - d * e) / determinant;
+    this.f = (b * e - a * f) / determinant;
+    return this;
+  }
+
+  inverse() {
+    return new PdfDomMatrixPolyfill([this.a, this.b, this.c, this.d, this.e, this.f]).invertSelf();
+  }
+
+  toFloat32Array() {
+    return new Float32Array([this.a, this.b, this.c, this.d, this.e, this.f]);
+  }
+
+  toFloat64Array() {
+    return new Float64Array([this.a, this.b, this.c, this.d, this.e, this.f]);
+  }
+}
+
+class PdfImageDataPolyfill {
+  data: Uint8ClampedArray;
+  width: number;
+  height: number;
+
+  constructor(dataOrWidth: Uint8ClampedArray | number, widthOrHeight: number, height?: number) {
+    if (typeof dataOrWidth === "number") {
+      this.width = dataOrWidth;
+      this.height = widthOrHeight;
+      this.data = new Uint8ClampedArray(this.width * this.height * 4);
+    } else {
+      this.data = dataOrWidth;
+      this.width = widthOrHeight;
+      this.height = height ?? 0;
+    }
+  }
+}
+
+class PdfPath2DPolyfill {
+  constructor(path?: unknown) {
+    void path;
+  }
+}
+
+function installPdfjsNodePolyfills() {
+  const runtime = globalThis as unknown as {
+    DOMMatrix?: unknown;
+    ImageData?: unknown;
+    Path2D?: unknown;
+  };
+  runtime.DOMMatrix ??= PdfDomMatrixPolyfill;
+  runtime.ImageData ??= PdfImageDataPolyfill;
+  runtime.Path2D ??= PdfPath2DPolyfill;
+}
+
+async function loadPdfjs(): Promise<PdfJsApi> {
+  if (!pdfjsPromise) {
+    installPdfjsNodePolyfills();
+    pdfjsPromise = import("pdfjs-dist/legacy/build/pdf.mjs");
+  }
+  return pdfjsPromise;
+}
 
 type TextItem = {
   str: string;
@@ -285,7 +425,7 @@ function parseProductsFromLines(lines: TextLine[]): Product[] {
   return products;
 }
 
-async function extractPage(page: PdfPageLike) {
+async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi) {
   const content = await page.getTextContent();
   const tokens: PositionedToken[] = [];
 
@@ -329,7 +469,7 @@ async function extractPage(page: PdfPageLike) {
   return { lines: groupLines(tokens), images };
 }
 
-async function getPdfDocument(data: Uint8Array) {
+async function getPdfDocument(data: Uint8Array, pdfjsLib: PdfJsApi) {
   // PDF.js v5 uses its fake worker in Node. Point it at the installed local worker so
   // Next's bundled route handler can load it without a browser-served worker asset.
   if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
@@ -344,20 +484,20 @@ async function getPdfDocument(data: Uint8Array) {
 }
 
 export async function parseOrderPdf(data: Uint8Array): Promise<Product[]> {
-  const pdf = await getPdfDocument(data);
+  const pdfjsLib = await loadPdfjs();
+  const pdf = await getPdfDocument(data, pdfjsLib);
   const allLines: TextLine[] = [];
   const allImages: PdfImageCandidate[] = [];
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
-    const extracted = await extractPage(page);
+    const extracted = await extractPage(page, pdfjsLib);
     allLines.push(...extracted.lines);
     allImages.push(...extracted.images);
   }
 
-  // The parsed rows are deliberately text-first. pdfjs exposes image operators without a stable
-  // Node canvas in server route handlers, so image candidates are recorded for future attachment
-  // while products safely fall back to the UI placeholder.
+  // The rows are parsed from PDF text, while the product images are decoded from the PDF image
+  // operators directly. This keeps the route independent from a native Node canvas renderer.
   const products = parseProductsFromLines(allLines);
   return products.map((product, index) => ({ ...product, image: allImages[index]?.data }));
 }
