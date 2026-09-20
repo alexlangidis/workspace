@@ -28,5 +28,8 @@
     "tailwindcss": "^4.1.13",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
+  },
+  "optionalDependencies": {
+    "@napi-rs/canvas-linux-x64-gnu": "^1.0.9"
   }
 }
