@@ -21,7 +21,7 @@ export default function ChecklistPage() {
   const router = useRouter();
   const scannerRef = useRef<HTMLInputElement>(null);
   const [order, setOrder] = useState<StoredOrder | null>(null);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("pending");
   const [search, setSearch] = useState("");
   const [scannerValue, setScannerValue] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);

@@ -10,9 +10,9 @@ type FilterControlsProps = {
 };
 
 const filters: Array<{ id: Filter; label: string }> = [
-  { id: "all", label: "Όλα" },
   { id: "pending", label: "Εκκρεμή" },
   { id: "completed", label: "Ολοκληρωμένα" },
+  { id: "all", label: "Όλα" },
 ];
 
 export function FilterControls({ filter, search, onFilterChange, onSearchChange }: FilterControlsProps) {
