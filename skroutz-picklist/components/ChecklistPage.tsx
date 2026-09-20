@@ -26,6 +26,7 @@ export default function ChecklistPage() {
   const [scannerValue, setScannerValue] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannerTargetId, setScannerTargetId] = useState<string | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -63,10 +64,21 @@ export default function ChecklistPage() {
     window.setTimeout(() => scannerRef.current?.focus(), 0);
   }, []);
 
-  const handleScan = useCallback((rawValue: string) => {
+  const handleScan = useCallback((rawValue: string, targetProductId?: string | null) => {
     const ean = normalizeCode(rawValue);
     if (!ean) return;
-    const matchingProducts = products.filter((item) => normalizeCode(item.ean) === ean);
+    const targetProduct = targetProductId ? products.find((item) => item.id === targetProductId) : undefined;
+
+    if (targetProduct && normalizeCode(targetProduct.ean) !== ean) {
+      showScanFeedback({
+        type: "error",
+        title: "Λάθος προϊόν",
+        detail: `Αναμενόμενο EAN: ${targetProduct.ean} · Σκαναρίστηκε: ${ean}`,
+      });
+      return;
+    }
+
+    const matchingProducts = targetProduct ? [targetProduct] : products.filter((item) => normalizeCode(item.ean) === ean);
     const product = matchingProducts.find((item) => item.pickedQuantity < item.quantity) ?? matchingProducts[0];
     if (!product) {
       showScanFeedback({ type: "error", title: "Το προϊόν δεν υπάρχει στην παραγγελία", detail: `EAN: ${ean}` });
@@ -82,10 +94,27 @@ export default function ChecklistPage() {
     showScanFeedback(next === product.quantity ? { type: "success", title: `Ολοκληρώθηκε: ${product.title}` } : { type: "success", title: `Προστέθηκε: ${product.title}`, detail: `${next} / ${product.quantity}` });
   }, [products, showScanFeedback, updateQuantity]);
 
-  const handleCameraDetected = useCallback((code: string) => {
+  const scannerTargetProduct = useMemo(
+    () => (scannerTargetId ? products.find((product) => product.id === scannerTargetId) : undefined),
+    [products, scannerTargetId],
+  );
+
+  const closeScanner = useCallback(() => {
     setIsScannerOpen(false);
-    handleScan(code);
-  }, [handleScan]);
+    setScannerTargetId(null);
+  }, []);
+
+  const openProductScanner = useCallback((productId: string) => {
+    setFeedback(null);
+    setScannerTargetId(productId);
+    setIsScannerOpen(true);
+  }, []);
+
+  const handleCameraDetected = useCallback((code: string) => {
+    const targetProductId = scannerTargetId;
+    closeScanner();
+    handleScan(code, targetProductId);
+  }, [closeScanner, handleScan, scannerTargetId]);
 
   function resetProgress() {
     if (!window.confirm("Να μηδενιστεί η πρόοδος συλλογής;")) return;
@@ -127,17 +156,27 @@ export default function ChecklistPage() {
 
   return (
     <main className="min-h-screen bg-cream text-ink">
-      {isScannerOpen && <BarcodeScanner onDetected={handleCameraDetected} onClose={() => setIsScannerOpen(false)} />}
+      {isScannerOpen && (
+        <BarcodeScanner
+          expectedProduct={scannerTargetProduct}
+          onDetected={handleCameraDetected}
+          onClose={closeScanner}
+        />
+      )}
       {showScrollTop && <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-5 left-5 z-30 grid size-10 place-items-center rounded-xl border border-line bg-white/95 text-muted shadow-lg backdrop-blur transition hover:border-teal hover:bg-teal hover:text-white sm:bottom-7 sm:left-8" aria-label="Επιστροφή στην κορυφή" title="Πάνω"><ArrowUp size={17} /></button>}
       <header className="sticky top-0 z-20 border-b border-line/80 bg-cream/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-12"><Logo /><div className="flex items-center gap-2"><button type="button" onClick={resetProgress} className="hidden items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-muted transition hover:bg-white hover:text-ink sm:flex"><RotateCcw size={15} /> Μηδενισμός προόδου</button><button type="button" onClick={newOrder} className="flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-xs font-bold text-ink transition hover:border-coral hover:text-coral"><FilePlus2 size={15} /> <span className="hidden sm:inline">Νέα παραγγελία</span><span className="sm:hidden">Νέα</span></button></div></div>
       </header>
       <div className="mx-auto max-w-[1440px] px-5 pb-16 pt-7 sm:px-8 lg:px-12 lg:pt-10">
-        <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><button type="button" onClick={() => router.push("/")} className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-muted transition hover:text-teal"><ArrowLeft size={14} /> νέα εισαγωγή</button><h1 className="font-display text-4xl font-semibold tracking-[-0.07em] sm:text-5xl">Η λίστα σου.</h1><p className="mt-2 text-sm text-muted">{order.sourceName} <span className="mx-2 text-line">·</span> έτοιμη για συλλογή</p></div><div className="relative w-full lg:w-[420px]"><div className="flex h-14 items-center gap-2 rounded-2xl bg-ink px-3 text-paper shadow-[0_12px_30px_rgba(15,28,26,0.14)]"><ScanLine size={19} className="ml-1 shrink-0 text-lime" /><input ref={scannerRef} value={scannerValue} onChange={(event) => setScannerValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleScan(scannerValue); } }} placeholder="Σκάναρε EAN..." aria-label="Χειροκίνητη εισαγωγή EAN" className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-paper outline-none placeholder:text-muted" autoComplete="off" /><button type="button" onClick={() => { setFeedback(null); setIsScannerOpen(true); }} className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime text-ink transition hover:bg-white" aria-label="Άνοιγμα κάμερας για barcode"><Camera size={19} /></button></div><p className="mt-2 text-right text-[10px] font-bold uppercase tracking-[0.14em] text-muted">EAN + Enter ή κάμερα · το πεδίο μένει ενεργό</p></div></div>
+        <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><button type="button" onClick={() => router.push("/")} className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-muted transition hover:text-teal"><ArrowLeft size={14} /> νέα εισαγωγή</button><h1 className="font-display text-4xl font-semibold tracking-[-0.07em] sm:text-5xl">Η λίστα σου.</h1><p className="mt-2 text-sm text-muted">{order.sourceName} <span className="mx-2 text-line">·</span> έτοιμη για συλλογή</p></div><div className="relative w-full lg:w-[420px]"><div className="flex h-14 items-center gap-2 rounded-2xl bg-ink px-3 text-paper shadow-[0_12px_30px_rgba(15,28,26,0.14)]"><ScanLine size={19} className="ml-1 shrink-0 text-lime" /><input ref={scannerRef} value={scannerValue} onChange={(event) => setScannerValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleScan(scannerValue); } }} placeholder="Σκάναρε EAN..." aria-label="Χειροκίνητη εισαγωγή EAN" className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-paper outline-none placeholder:text-muted" autoComplete="off" /><button type="button" onClick={() => { setFeedback(null); setScannerTargetId(null); setIsScannerOpen(true); }} className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime text-ink transition hover:bg-white" aria-label="Άνοιγμα κάμερας για barcode"><Camera size={19} /></button></div><p className="mt-2 text-right text-[10px] font-bold uppercase tracking-[0.14em] text-muted">EAN + Enter ή κάμερα · το πεδίο μένει ενεργό</p></div></div>
         {feedback && <div className={`mb-6 flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm font-semibold shadow-sm ${feedback.type === "success" ? "border-teal/20 bg-mint text-teal" : "border-coral/30 bg-coral/10 text-coral"}`}><div className={`grid size-7 shrink-0 place-items-center rounded-full ${feedback.type === "success" ? "bg-teal text-white" : "bg-coral text-white"}`}>{feedback.type === "success" ? <Check size={15} strokeWidth={3} /> : <AlertTriangle size={15} />}</div><div className="min-w-0 flex-1"><p className="truncate">{feedback.title}</p>{feedback.detail && <p className="mt-0.5 text-xs font-medium opacity-75">{feedback.detail}</p>}</div><button type="button" onClick={() => setFeedback(null)} aria-label="Κλείσιμο μηνύματος"><X size={16} /></button></div>}
-        <ProgressHeader productCount={products.length} unitCount={unitCount} pickedUnits={pickedUnits} completedProducts={completedProducts} />
+        <div className="sticky top-[73px] z-10 -mx-5 mb-1 border-y border-line/80 bg-cream/90 px-5 py-2 backdrop-blur-md sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+          <div className="mx-auto max-w-[1440px]">
+            <ProgressHeader compact productCount={products.length} unitCount={unitCount} pickedUnits={pickedUnits} completedProducts={completedProducts} />
+          </div>
+        </div>
         <div className="mt-7"><FilterControls filter={filter} search={search} onFilterChange={setFilter} onSearchChange={setSearch} /></div>
-        <div className="mt-8 space-y-8">{groupedProducts.length > 0 ? groupedProducts.map((group, groupIndex) => <section key={`${group.category}-${group.products[0]?.originalIndex ?? groupIndex}`}><div className="mb-3 flex items-center gap-3"><h2 className="font-display text-xl font-semibold tracking-[-0.04em] text-ink">{group.category}</h2><span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-muted shadow-sm">{group.products.length}</span></div><div className="space-y-3">{group.products.map((product) => <ProductRow key={product.id} product={product} onChangeQuantity={updateQuantity} />)}</div></section>) : <div className="rounded-[26px] border border-dashed border-line bg-white px-6 py-16 text-center"><p className="font-display text-xl font-semibold tracking-[-0.04em]">Δεν βρέθηκαν προϊόντα</p><p className="mt-2 text-sm text-muted">Δοκίμασε διαφορετικό φίλτρο ή όρο αναζήτησης.</p></div>}</div>
+        <div className="mt-8 space-y-8">{groupedProducts.length > 0 ? groupedProducts.map((group, groupIndex) => <section key={`${group.category}-${group.products[0]?.originalIndex ?? groupIndex}`}><div className="mb-3 flex items-center gap-3"><h2 className="font-display text-xl font-semibold tracking-[-0.04em] text-ink">{group.category}</h2><span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-muted shadow-sm">{group.products.length}</span></div><div className="space-y-3">{group.products.map((product) => <ProductRow key={product.id} product={product} onChangeQuantity={updateQuantity} onCollect={openProductScanner} />)}</div></section>) : <div className="rounded-[26px] border border-dashed border-line bg-white px-6 py-16 text-center"><p className="font-display text-xl font-semibold tracking-[-0.04em]">Δεν βρέθηκαν προϊόντα</p><p className="mt-2 text-sm text-muted">Δοκίμασε διαφορετικό φίλτρο ή όρο αναζήτησης.</p></div>}</div>
       </div>
     </main>
   );

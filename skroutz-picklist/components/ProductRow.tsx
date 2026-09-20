@@ -5,9 +5,10 @@ import type { Product } from "@/types/product";
 type ProductRowProps = {
   product: Product;
   onChangeQuantity: (id: string, nextQuantity: number) => void;
+  onCollect: (id: string) => void;
 };
 
-export function ProductRow({ product, onChangeQuantity }: ProductRowProps) {
+export function ProductRow({ product, onChangeQuantity, onCollect }: ProductRowProps) {
   const isComplete = product.pickedQuantity === product.quantity;
   return (
     <article className={`product-row group flex flex-col gap-4 rounded-[22px] border p-4 transition sm:flex-row sm:items-center ${isComplete ? "border-teal/20 bg-mint/55" : "border-line bg-white hover:border-teal/35 hover:shadow-[0_12px_35px_rgba(15,28,26,0.06)]"}`}>
@@ -23,10 +24,16 @@ export function ProductRow({ product, onChangeQuantity }: ProductRowProps) {
         </div>
       </div>
       <div className="flex items-center justify-between gap-4 border-t border-line pt-3 sm:w-[154px] sm:flex-col sm:items-stretch sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
-        <div className={`flex items-center gap-2 text-sm font-bold ${isComplete ? "text-teal" : "text-muted"}`}>
+        <button
+          type="button"
+          onClick={() => onCollect(product.id)}
+          disabled={isComplete}
+          aria-label={isComplete ? `Το ${product.title} είναι ολοκληρωμένο` : `Σάρωση EAN για ${product.title}`}
+          className={`flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-bold transition ${isComplete ? "cursor-default text-teal" : "text-muted hover:bg-mint hover:text-teal"}`}
+        >
           {isComplete ? <Check size={16} strokeWidth={3} /> : <ScanLine size={16} />}
           <span>{isComplete ? "Έτοιμο" : "Συλλογή"}</span>
-        </div>
+        </button>
         <div className="flex items-center justify-end gap-2">
           <button type="button" onClick={() => onChangeQuantity(product.id, product.pickedQuantity - 1)} disabled={product.pickedQuantity === 0} aria-label={`Μείωση ποσότητας για ${product.title}`} className="grid size-10 place-items-center rounded-xl border border-line bg-white text-muted transition hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-35"><Minus size={17} /></button>
           <span className={`min-w-[48px] text-center font-display text-xl font-semibold tracking-[-0.04em] ${isComplete ? "text-teal" : "text-ink"}`}>{product.pickedQuantity}<span className="text-sm font-medium text-muted"> / {product.quantity}</span></span>
