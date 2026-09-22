@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft, ArrowUp, Camera, Check, FilePlus2, RotateCcw, ScanLine, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertTriangle, ArrowLeft, ArrowUp, Camera, Check, FilePlus2, RotateCcw, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { FilterControls, type Filter } from "@/components/FilterControls";
@@ -19,11 +19,9 @@ function normalizeCode(value: string) {
 
 export default function ChecklistPage() {
   const router = useRouter();
-  const scannerRef = useRef<HTMLInputElement>(null);
   const [order, setOrder] = useState<StoredOrder | null>(null);
   const [filter, setFilter] = useState<Filter>("pending");
   const [search, setSearch] = useState("");
-  const [scannerValue, setScannerValue] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannerTargetId, setScannerTargetId] = useState<string | null>(null);
@@ -60,8 +58,6 @@ export default function ChecklistPage() {
 
   const showScanFeedback = useCallback((nextFeedback: Feedback) => {
     setFeedback(nextFeedback);
-    setScannerValue("");
-    window.setTimeout(() => scannerRef.current?.focus(), 0);
   }, []);
 
   const handleScan = useCallback((rawValue: string, targetProductId?: string | null) => {
@@ -119,7 +115,6 @@ export default function ChecklistPage() {
   function resetProgress() {
     if (!window.confirm("Να μηδενιστεί η πρόοδος συλλογής;")) return;
     setOrder((current) => current ? { ...current, products: current.products.map((product) => ({ ...product, pickedQuantity: 0 })) } : current);
-    window.setTimeout(() => scannerRef.current?.focus(), 0);
   }
 
   function newOrder() {
@@ -168,7 +163,7 @@ export default function ChecklistPage() {
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-12"><Logo /><div className="flex items-center gap-2"><button type="button" onClick={resetProgress} className="hidden items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-muted transition hover:bg-white hover:text-ink sm:flex"><RotateCcw size={15} /> Μηδενισμός προόδου</button><button type="button" onClick={newOrder} className="flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-xs font-bold text-ink transition hover:border-coral hover:text-coral"><FilePlus2 size={15} /> <span className="hidden sm:inline">Νέα παραγγελία</span><span className="sm:hidden">Νέα</span></button></div></div>
       </header>
       <div className="mx-auto max-w-[1440px] px-5 pb-16 pt-7 sm:px-8 lg:px-12 lg:pt-10">
-        <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><button type="button" onClick={() => router.push("/")} className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-muted transition hover:text-teal"><ArrowLeft size={14} /> νέα εισαγωγή</button><h1 className="font-display text-4xl font-semibold tracking-[-0.07em] sm:text-5xl">Η λίστα σου.</h1><p className="mt-2 text-sm text-muted">{order.sourceName} <span className="mx-2 text-line">·</span> έτοιμη για συλλογή</p></div><div className="relative w-full lg:w-[420px]"><div className="flex h-14 items-center gap-2 rounded-2xl bg-ink px-3 text-paper shadow-[0_12px_30px_rgba(15,28,26,0.14)]"><ScanLine size={19} className="ml-1 shrink-0 text-lime" /><input ref={scannerRef} value={scannerValue} onChange={(event) => setScannerValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleScan(scannerValue); } }} placeholder="Σκάναρε EAN..." aria-label="Χειροκίνητη εισαγωγή EAN" className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-paper outline-none placeholder:text-muted" autoComplete="off" /><button type="button" onClick={() => { setFeedback(null); setScannerTargetId(null); setIsScannerOpen(true); }} className="grid size-10 shrink-0 place-items-center rounded-xl bg-lime text-ink transition hover:bg-white" aria-label="Άνοιγμα κάμερας για barcode"><Camera size={19} /></button></div></div></div>
+        <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><button type="button" onClick={() => router.push("/")} className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-muted transition hover:text-teal"><ArrowLeft size={14} /> νέα εισαγωγή</button><h1 className="font-display text-4xl font-semibold tracking-[-0.07em] sm:text-5xl">Η λίστα σου.</h1><p className="mt-2 text-sm text-muted">{order.sourceName} <span className="mx-2 text-line">·</span> έτοιμη για συλλογή</p></div><button type="button" onClick={() => { setFeedback(null); setScannerTargetId(null); setIsScannerOpen(true); }} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 self-start rounded-2xl bg-ink px-4 text-sm font-bold text-paper shadow-[0_12px_30px_rgba(15,28,26,0.14)] transition hover:bg-teal lg:self-auto" aria-label="Άνοιγμα κάμερας για barcode"><Camera size={18} className="text-lime" />Σάρωση EAN</button></div>
         {feedback && <div className={`mb-6 flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm font-semibold shadow-sm ${feedback.type === "success" ? "border-teal/20 bg-mint text-teal" : "border-coral/30 bg-coral/10 text-coral"}`}><div className={`grid size-7 shrink-0 place-items-center rounded-full ${feedback.type === "success" ? "bg-teal text-white" : "bg-coral text-white"}`}>{feedback.type === "success" ? <Check size={15} strokeWidth={3} /> : <AlertTriangle size={15} />}</div><div className="min-w-0 flex-1"><p className="truncate">{feedback.title}</p>{feedback.detail && <p className="mt-0.5 text-xs font-medium opacity-75">{feedback.detail}</p>}</div><button type="button" onClick={() => setFeedback(null)} aria-label="Κλείσιμο μηνύματος"><X size={16} /></button></div>}
         <div className="sticky top-[73px] z-10 -mx-5 mb-1 border-y border-line/80 bg-cream/90 px-5 py-2 backdrop-blur-md sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
           <div className="mx-auto max-w-[1440px]">
