@@ -14,15 +14,23 @@ function fixture(pages: Array<{ text: Text[]; photos: Photo[] }>): Uint8Array {
   add("");
   add("");
   const font = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  const unicodeText = [...new Set(pages.flatMap(page => page.text.map(item => item.text)).filter(text => /[^\x00-\x7f]/.test(text)))];
+  const mappings = unicodeText.map((text, i) => `<${(65 + i).toString(16)}> <${Array.from(text).map(character => character.charCodeAt(0).toString(16).padStart(4, "0")).join("")}>`).join("\n");
+  const cmap = add(stream("", Buffer.from(`/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /FixtureUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<00> <FF>\nendcodespacerange\n${unicodeText.length} beginbfchar\n${mappings}\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend`)));
+  const unicodeFont = add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode ${cmap} 0 R >>`);
   const pageIds: number[] = [];
   for (const page of pages) {
     const images = page.photos.map((photo) => add(stream("/Type /XObject /Subtype /Image /Width 6 /Height 6 /ColorSpace /DeviceRGB /BitsPerComponent 8", Buffer.from(Array.from({ length: 36 }, () => photo.color).flat()))));
     const content = [
-      ...page.text.map(({ text, x, y }) => `BT /F1 11 Tf 1 0 0 1 ${x} ${y} Tm (${text.replace(/[\\()]/g, "\\$&")}) Tj ET`),
+      ...page.text.map(({ text, x, y }) => {
+        const unicodeIndex = unicodeText.indexOf(text);
+        const encoded = unicodeIndex >= 0 ? String.fromCharCode(65 + unicodeIndex) : text.replace(/[\\()]/g, "\\$&");
+        return `BT /${unicodeIndex >= 0 ? "F2" : "F1"} 11 Tf 1 0 0 1 ${x} ${y} Tm (${encoded}) Tj ET`;
+      }),
       ...page.photos.map((photo, i) => `q 60 0 0 60 40 ${photo.y} cm /Photo${i} Do Q`),
     ].join("\n");
     const contents = add(stream("", Buffer.from(content)));
-    pageIds.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${font} 0 R >> /XObject << ${images.map((id, i) => `/Photo${i} ${id} 0 R`).join(" ")} >> >> /Contents ${contents} 0 R >>`));
+    pageIds.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${font} 0 R /F2 ${unicodeFont} 0 R >> /XObject << ${images.map((id, i) => `/Photo${i} ${id} 0 R`).join(" ")} >> >> /Contents ${contents} 0 R >>`));
   }
   objects[0] = Buffer.from("<< /Type /Catalog /Pages 2 0 R >>");
   objects[1] = Buffer.from(`<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`);
@@ -128,4 +136,32 @@ test("a title split between pages keeps the photo from the previous page", async
   assert.equal(product.title, "Huawei Watch Fit 5 Pro - Plum");
   assert.equal(product.mpn, "KF-5949419373785");
   assert.deepEqual(firstPixel(product.image), [255, 0, 255]);
+});
+
+test("a table header on the previous page is not replaced by a later table's columns", async () => {
+  const products = await parseOrderPdf(fixture([
+    { text: [
+      { text: "Προϊόν", x: 120, y: 780 }, { text: "Ποσότητα", x: 500, y: 780 },
+      { text: "Tablet case", x: 120, y: 740 }, { text: "MPN: TABLET", x: 120, y: 720 },
+      { text: "EAN: 9319456607406", x: 120, y: 700 }, { text: "1 x", x: 500, y: 720 },
+      { text: "Tracker accessories", x: 40, y: 140 },
+      { text: "Προϊόν", x: 160, y: 110 }, { text: "Ποσότητα", x: 460, y: 110 },
+    ], photos: [{ y: 695, color: [255, 0, 0] }] },
+    { text: [
+      { text: "Airtag Clear", x: 160, y: 760 }, { text: "MPN: AIRTAG", x: 160, y: 740 },
+      { text: "EAN: 5906302360765", x: 160, y: 720 }, { text: "1 x", x: 460, y: 745 },
+      { text: "Other products", x: 40, y: 670 },
+      { text: "Προϊόν", x: 130, y: 640 }, { text: "Ποσότητα", x: 510, y: 640 },
+      { text: "Fitness ball", x: 130, y: 600 }, { text: "MPN: BALL", x: 130, y: 580 },
+      { text: "EAN: 5907769300684", x: 130, y: 560 }, { text: "2 x", x: 510, y: 580 },
+    ], photos: [{ y: 710, color: [0, 255, 0] }, { y: 555, color: [0, 0, 255] }] },
+  ]));
+  assert.equal(products.length, 3);
+  assert.equal(products[1].title, "Airtag Clear");
+  assert.equal(products[1].category, "Tracker accessories");
+  assert.equal(products[1].quantity, 1);
+  assert.equal(products[2].category, "Other products");
+  assert.equal(products[2].quantity, 2);
+  assert.deepEqual(firstPixel(products[1].image), [0, 255, 0]);
+  assert.deepEqual(firstPixel(products[2].image), [0, 0, 255]);
 });
