@@ -163,6 +163,8 @@ type TextLine = {
   text: string;
   minX: number;
   maxX: number;
+  productColumnX?: number;
+  quantityColumnX?: number;
 };
 
 type PdfImageCandidate = {
@@ -175,9 +177,11 @@ type PdfImageCandidate = {
 };
 
 type PdfPageLike = {
+  view: number[];
   getTextContent: () => Promise<{ items: unknown[] }>;
   getOperatorList: () => Promise<{ fnArray: number[]; argsArray: unknown[][] }>;
   objs: { get: (id: string, callback: (data: PdfImageData) => void) => null };
+  commonObjs: { get: (id: string, callback: (data: PdfImageData) => void) => null };
 };
 
 type PdfImageData = {
@@ -187,31 +191,11 @@ type PdfImageData = {
   data: Uint8Array | Uint8ClampedArray;
 };
 
-const CATEGORY_HINTS = [
-  "Θήκες",
-  "Προστατευτικά",
-  "Φορτιστές",
-  "Καλώδια",
-  "Ακουστικά",
-  "Αξεσουάρ",
-  "Βάσεις",
-  "Μπαταρίες",
-  "Πληκτρολόγια",
-  "Ποντίκια",
-];
-
-const fieldPattern = /^(MPN|EAN)\s*:\s*(.*)$/i;
 const quantityPattern = /^(\d+)\s*[×x*]?(?:\s*)$/;
 const eanPattern = /^\d{8,14}$/;
 
 function cleanText(value: string): string {
   return value.replace(/\s+/g, " ").trim();
-}
-
-function isMostlyUppercase(value: string): boolean {
-  const letters = value.match(/[A-Za-zΑ-Ωα-ω]/g) ?? [];
-  const uppercase = value.match(/[A-ZΑ-Ω]/g) ?? [];
-  return letters.length > 3 && uppercase.length / letters.length > 0.8;
 }
 
 function groupLines(tokens: PositionedToken[]): TextLine[] {
@@ -324,43 +308,39 @@ function encodePdfImage(image: PdfImageData): string | undefined {
   return `data:image/png;base64,${png.toString("base64")}`;
 }
 
-function isLikelyCategory(text: string): boolean {
-  const normalized = cleanText(text);
-  if (!normalized || normalized.length < 4 || normalized.length > 100) return false;
-  if (/^(Προϊόν|Ποσότητα|MPN|EAN|Σελίδα|Page)\b/i.test(normalized)) return false;
-  if (fieldPattern.test(normalized) || quantityPattern.test(normalized) || eanPattern.test(normalized)) return false;
-  return CATEGORY_HINTS.some((hint) => normalized.includes(hint)) || isMostlyUppercase(normalized);
-}
-
-function isTitleCandidate(text: string): boolean {
-  const normalized = cleanText(text);
-  if (!normalized || normalized.length < 5) return false;
-  if (fieldPattern.test(normalized) || quantityPattern.test(normalized) || eanPattern.test(normalized)) return false;
-  if (/^(Προϊόν|Ποσότητα|MPN|EAN|Σελίδα|Page)\b/i.test(normalized)) return false;
-  return true;
-}
-
 function looksLikeMpn(value: string): boolean {
   const normalized = normalizeFieldValue(value);
-  return normalized.length > 2 && !eanPattern.test(normalized);
+  return normalized.length > 0;
 }
 
-function parseProductsFromLines(lines: TextLine[]): Product[] {
+export class PdfOrderParseError extends Error {}
+
+function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] = []): Product[] {
   const products: Product[] = [];
   let category = "Λοιπά";
-  let current: Partial<Product> & { titleLines?: string[] } | null = null;
-  let productIndex = 0;
+  let current: (Partial<Product> & { topY: number; bottomY: number; titleX: number }) | null = null;
+  let lastField: "MPN" | "EAN" | undefined;
+  const usedImages = new Set<PdfImageCandidate>();
 
   const flush = () => {
-    if (!current?.title || !current.ean || !current.mpn || !current.quantity) return;
-    const title = cleanText(current.title);
-    const ean = extractEan(current.ean) ?? "";
-    const mpn = normalizeFieldValue(current.mpn);
+    if (!current) return;
+    const title = cleanText(current.title ?? "");
+    const ean = extractEan(current.ean ?? "") ?? "";
+    const mpn = normalizeFieldValue(current.mpn ?? "");
     const quantity = Number(current.quantity);
     if (!title || !ean || !looksLikeMpn(mpn) || !Number.isFinite(quantity) || quantity < 1) {
-      return;
+      throw new PdfOrderParseError(`Δεν διαβάστηκε πλήρως το προϊόν «${title || mpn || ean || "χωρίς τίτλο"}». Έλεγξε αν ο τίτλος, το MPN, το EAN ή η ποσότητα έχουν κοπεί στο PDF.`);
     }
 
+    const row = current;
+    // Match by location, never by array index: one missing row/image must not shift the rest.
+    const image = images
+      .filter((candidate) => candidate.data && !usedImages.has(candidate) && candidate.x + candidate.width / 2 < row.titleX)
+      .map((candidate) => ({ candidate, overlap: Math.min(candidate.y + candidate.height, row.topY) - Math.max(candidate.y, row.bottomY) }))
+      .filter(({ overlap }) => overlap > 0)
+      .sort((a, b) => b.overlap - a.overlap)[0]?.candidate;
+    if (image) usedImages.add(image);
+    const productIndex = products.length;
     products.push({
       id: `${ean}-${productIndex}`,
       category: current.category ?? category,
@@ -370,54 +350,71 @@ function parseProductsFromLines(lines: TextLine[]): Product[] {
       quantity,
       pickedQuantity: 0,
       originalIndex: productIndex,
+      image: image?.data,
     });
-    productIndex += 1;
     current = null;
+    lastField = undefined;
   };
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    const text = cleanText(line.text);
-    if (!text) continue;
-
-    if (isHeaderLine(text)) continue;
-
-    const nextLine = cleanText(lines[index + 1]?.text ?? "");
-    if ((isLikelyCategory(text) || isHeaderLine(nextLine)) && !current?.title) {
-      flush();
-      category = text;
+    if (isHeaderLine(line.text) || /^(?:Σελίδα|Page)\s+\d|^\d+\s*\/\s*\d+$/i.test(cleanText(line.text))) continue;
+    const quantityTokens = line.quantityColumnX === undefined ? [] : line.tokens.filter((token) => token.x >= line.quantityColumnX! - 5);
+    const textTokens = line.tokens.filter((token) => !quantityTokens.includes(token));
+    const text = cleanText(textTokens.map((token) => token.text).join(" "));
+    let categoryEnd = index;
+    while (categoryEnd + 1 < lines.length && categoryEnd - index < 3 && !isHeaderLine(lines[categoryEnd + 1].text) && line.productColumnX !== undefined && lines[categoryEnd + 1].minX < line.productColumnX - 10) categoryEnd += 1;
+    if (text && isHeaderLine(lines[categoryEnd + 1]?.text ?? "") && (line.productColumnX === undefined || line.minX < line.productColumnX - 10)) {
+      // A repeated table header can occur in the middle of a row at a page break.
+      if (current?.title && current.mpn && extractEan(current.ean ?? "") && current.quantity) flush();
+      category = cleanText(lines.slice(index, categoryEnd + 1).map((item) => item.text).join(" "));
+      index = categoryEnd;
       continue;
     }
 
+    const quantityText = cleanText(quantityTokens.map((token) => token.text).join(" "));
+    const quantityMatch = quantityText.match(quantityPattern);
+    const quantity = line.quantityColumnX === undefined
+      ? extractQuantity(text)
+      : extractQuantity(quantityText) ?? (quantityMatch ? Number(quantityMatch[1]) : null);
+    const hasMpn = /\bMPN\s*:/i.test(text);
+    const hasEan = /\bEAN\s*:/i.test(text);
     const mpn = extractField(text, "MPN");
     const ean = extractField(text, "EAN");
-    const quantity = extractQuantity(text);
-    if (mpn || ean || quantity !== null) {
-      if (!current) current = { category, titleLines: [] };
-      if (mpn) current.mpn = mpn;
-      if (ean) current.ean = ean;
-      if (quantity !== null) current.quantity = quantity;
-      flush();
-      continue;
-    }
+    const isFieldContinuation = Boolean(current && lastField && text && !hasMpn && !hasEan && (lastField === "MPN" ? !current.mpn || /^[A-Za-z0-9._/#-]+$/.test(text) : /^[\d\s]+$/.test(text)));
+    const isTitle = text && !hasMpn && !hasEan && !isFieldContinuation && !quantityPattern.test(text);
 
-    if (current?.mpn && !current.ean) {
-      const eanOnly = extractEan(text);
-      if (eanOnly) {
-        current.ean = eanOnly;
-        flush();
-        continue;
+    if (isTitle && (current?.mpn !== undefined || current?.ean !== undefined)) flush();
+    if (!current) {
+      if (!text && quantity === null) continue;
+      current = { category, topY: line.y, bottomY: line.y, titleX: textTokens[0]?.x ?? line.productColumnX ?? 0 };
+    }
+    current.topY = Math.max(current.topY, ...line.tokens.map((token) => token.y + token.height));
+    current.bottomY = Math.min(current.bottomY, line.y);
+
+    if (hasMpn) {
+      if (current.mpn !== undefined) throw new PdfOrderParseError("Βρέθηκε δεύτερο MPN στην ίδια γραμμή προϊόντος. Έλεγξε τη διάταξη του PDF.");
+      current.mpn = mpn ?? "";
+      lastField = "MPN";
+    }
+    if (hasEan) {
+      if (current.ean !== undefined) throw new PdfOrderParseError("Βρέθηκε δεύτερο EAN στην ίδια γραμμή προϊόντος. Έλεγξε τη διάταξη του PDF.");
+      current.ean = ean ?? "";
+      lastField = "EAN";
+    }
+    if (isFieldContinuation) {
+      if (lastField === "MPN") current.mpn = normalizeFieldValue(`${current.mpn ?? ""}${text}`);
+      else current.ean = `${current.ean ?? ""}${text}`;
+    }
+    if (isTitle) {
+      if (!current.title) current.titleX = textTokens[0]?.x ?? current.titleX;
+      current.title = cleanText(`${current.title ?? ""} ${text}`);
+    }
+    if (quantity !== null) {
+      if (current.quantity !== undefined && current.quantity !== quantity) {
+        throw new PdfOrderParseError("Βρέθηκαν διαφορετικές ποσότητες για το ίδιο προϊόν. Έλεγξε τη διάταξη του PDF.");
       }
-    }
-
-    if (!current) current = { category, titleLines: [] };
-    if (current.title && (current.mpn || current.ean || current.quantity)) {
-      flush();
-      current = { category, titleLines: [] };
-    }
-    if (isTitleCandidate(text)) {
-      current.titleLines = [...(current.titleLines ?? []), text];
-      current.title = current.titleLines.join(" ");
+      current.quantity = quantity;
     }
   }
 
@@ -425,7 +422,18 @@ function parseProductsFromLines(lines: TextLine[]): Product[] {
   return products;
 }
 
-async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi) {
+function multiplyMatrices(left: number[], right: number[]): number[] {
+  return [
+    left[0] * right[0] + left[2] * right[1],
+    left[1] * right[0] + left[3] * right[1],
+    left[0] * right[2] + left[2] * right[3],
+    left[1] * right[2] + left[3] * right[3],
+    left[0] * right[4] + left[2] * right[5] + left[4],
+    left[1] * right[4] + left[3] * right[5] + left[5],
+  ];
+}
+
+async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi, pageOffset: number) {
   const content = await page.getTextContent();
   const tokens: PositionedToken[] = [];
 
@@ -436,37 +444,57 @@ async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi) {
     tokens.push({
       text: textItem.str,
       x: textItem.transform[4],
-      y: textItem.transform[5],
+      y: textItem.transform[5] - pageOffset,
       width: textItem.width,
       height: textItem.height,
     });
   }
 
+  const productColumnX = tokens.find((token) => /^MPN\s*:/i.test(cleanText(token.text)))?.x
+    ?? tokens.find((token) => /^EAN\s*:/i.test(cleanText(token.text)))?.x
+    ?? tokens.find((token) => cleanText(token.text) === "Προϊόν")?.x;
+  const quantityColumnX = tokens.find((token) => cleanText(token.text) === "Ποσότητα")?.x
+    ?? tokens.find((token) => quantityPattern.test(cleanText(token.text)) && token.x > page.view[2] * 0.6)?.x;
   const images: PdfImageCandidate[] = [];
   try {
     const operatorList = await page.getOperatorList();
-    let imageIndex = 0;
+    let matrix = [1, 0, 0, 1, 0, 0];
+    const stack: number[][] = [];
     for (let index = 0; index < operatorList.fnArray.length; index += 1) {
       const fn = operatorList.fnArray[index];
       const args = operatorList.argsArray[index] as unknown[];
+      if (fn === pdfjsLib.OPS.save) { stack.push([...matrix]); continue; }
+      if (fn === pdfjsLib.OPS.restore) { matrix = stack.pop() ?? [1, 0, 0, 1, 0, 0]; continue; }
+      if (fn === pdfjsLib.OPS.transform) { matrix = multiplyMatrices(matrix, args as number[]); continue; }
       if (fn !== pdfjsLib.OPS.paintImageXObject && fn !== pdfjsLib.OPS.paintInlineImageXObject) continue;
       const name = typeof args?.[0] === "string" ? args[0] : `image-${index}`;
-      const width = typeof args?.[1] === "number" ? args[1] : 0;
-      const height = typeof args?.[2] === "number" ? args[2] : 0;
-      // Skroutz exports each product row as a larger product image followed by a smaller barcode image.
-      if (imageIndex % 2 === 0) {
-        const data = await new Promise<PdfImageData | undefined>((resolve) => {
-          try { page.objs.get(name, (image) => resolve(image)); } catch { resolve(undefined); }
+      const corners = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([x, y]) => [matrix[0] * x + matrix[2] * y + matrix[4], matrix[1] * x + matrix[3] * y + matrix[5]]);
+      const x = Math.max(page.view[0], Math.min(...corners.map((point) => point[0])));
+      const right = Math.min(page.view[2], Math.max(...corners.map((point) => point[0])));
+      const bottom = Math.max(page.view[1], Math.min(...corners.map((point) => point[1])));
+      const top = Math.min(page.view[3], Math.max(...corners.map((point) => point[1])));
+      // Product photos are in the left image column; barcodes are in the text column.
+      if (right <= x || top <= bottom || (productColumnX !== undefined && (x + right) / 2 >= productColumnX)) continue;
+      const data = fn === pdfjsLib.OPS.paintInlineImageXObject
+        ? args[0] as PdfImageData
+        : await new Promise<PdfImageData | undefined>((resolve) => {
+          try { (name.startsWith("g_") ? page.commonObjs : page.objs).get(name, (image) => resolve(image)); } catch { resolve(undefined); }
         });
-        images.push({ name, x: 0, y: 0, width, height, data: data ? encodePdfImage(data) : undefined });
-      }
-      imageIndex += 1;
+      images.push({ name, x, y: bottom - pageOffset, width: right - x, height: top - bottom, data: data ? encodePdfImage(data) : undefined });
     }
   } catch {
     // Image extraction is best effort. Text parsing should never fail because images are unavailable.
   }
 
-  return { lines: groupLines(tokens), images };
+  let currentProductColumnX = productColumnX;
+  let currentQuantityColumnX = quantityColumnX;
+  return { lines: groupLines(tokens).map((line) => {
+    if (isHeaderLine(line.text)) {
+      currentProductColumnX = line.tokens.find((token) => cleanText(token.text) === "Προϊόν")?.x ?? currentProductColumnX;
+      currentQuantityColumnX = line.tokens.find((token) => cleanText(token.text) === "Ποσότητα")?.x ?? currentQuantityColumnX;
+    }
+    return { ...line, productColumnX: currentProductColumnX, quantityColumnX: currentQuantityColumnX };
+  }), images };
 }
 
 async function getPdfDocument(data: Uint8Array, pdfjsLib: PdfJsApi) {
@@ -488,25 +516,26 @@ export async function parseOrderPdf(data: Uint8Array): Promise<Product[]> {
   const pdf = await getPdfDocument(data, pdfjsLib);
   const allLines: TextLine[] = [];
   const allImages: PdfImageCandidate[] = [];
-
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const extracted = await extractPage(page, pdfjsLib);
-    allLines.push(...extracted.lines);
-    allImages.push(...extracted.images);
+  let pageOffset = 0;
+  try {
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const extracted = await extractPage(page, pdfjsLib, pageOffset);
+      allLines.push(...extracted.lines);
+      allImages.push(...extracted.images);
+      pageOffset += page.view[3] - page.view[1];
+    }
+    return parseProductsFromLines(allLines, allImages);
+  } finally {
+    await pdf.destroy();
   }
-
-  // The rows are parsed from PDF text, while the product images are decoded from the PDF image
-  // operators directly. This keeps the route independent from a native Node canvas renderer.
-  const products = parseProductsFromLines(allLines);
-  return products.map((product, index) => ({ ...product, image: allImages[index]?.data }));
 }
 
 export function parseProductsFromTextLines(lines: string[]): Product[] {
   const positioned = lines.map((text, index) => ({
     text,
     x: 0,
-    y: lines.length - index,
+    y: (lines.length - index) * 20,
     width: text.length,
     height: 10,
   }));

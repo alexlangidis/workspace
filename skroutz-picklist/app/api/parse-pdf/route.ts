@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { parseOrderPdf } from "@/lib/pdf/parseOrderPdf";
+import { parseOrderPdf, PdfOrderParseError } from "@/lib/pdf/parseOrderPdf";
 
 export const runtime = "nodejs";
 
@@ -25,6 +25,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ products, sourceName: file.name });
   } catch (error) {
+    if (error instanceof PdfOrderParseError) {
+      return NextResponse.json({ error: error.message }, { status: 422 });
+    }
     console.error("PDF parsing failed", error);
     return NextResponse.json({ error: "Δεν ήταν δυνατή η επεξεργασία του PDF." }, { status: 500 });
   }

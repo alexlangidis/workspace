@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "parse:sample": "tsx scripts/parse-sample.ts"
+    "parse:sample": "tsx scripts/parse-sample.ts",
+    "test:pdf": "tsx scripts/test-pdf-parser.ts"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
