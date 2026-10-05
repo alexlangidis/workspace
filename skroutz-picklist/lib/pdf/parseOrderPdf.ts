@@ -455,15 +455,26 @@ async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi, pageOffset: nu
     });
   }
 
-  const productColumnX = tokens.find((token) => /^MPN\s*:/i.test(cleanText(token.text)))?.x
-    ?? tokens.find((token) => /^EAN\s*:/i.test(cleanText(token.text)))?.x
-    ?? previousColumns.productColumnX
+  // Initial rows may only contain the previous product's EAN. A later table's
+  // MPN must not change that continuation's columns or turn it into a category.
+  const firstField = [...tokens].sort((a, b) => b.y - a.y).find((token) => /^(?:MPN|EAN)\s*:/i.test(cleanText(token.text)));
+  const productColumnX = previousColumns.productColumnX
+    ?? firstField?.x
     ?? tokens.find((token) => cleanText(token.text) === "Προϊόν")?.x;
   // A page can begin with rows from the previous table, before a different table's header.
   // Its first body quantity (or the preceding page's column) describes those initial rows.
-  const quantityColumnX = tokens.find((token) => quantityPattern.test(cleanText(token.text)) && token.x > page.view[2] * 0.6)?.x
-    ?? previousColumns.quantityColumnX
+  const quantityColumnX = previousColumns.quantityColumnX
+    ?? tokens.find((token) => quantityPattern.test(cleanText(token.text)) && token.x > page.view[2] * 0.6)?.x
     ?? tokens.find((token) => cleanText(token.text) === "Ποσότητα")?.x;
+  let currentProductColumnX = productColumnX;
+  let currentQuantityColumnX = quantityColumnX;
+  const lines = groupLines(tokens).map((line) => {
+    if (isHeaderLine(line.text)) {
+      currentProductColumnX = line.tokens.find((token) => cleanText(token.text) === "Προϊόν")?.x ?? currentProductColumnX;
+      currentQuantityColumnX = line.tokens.find((token) => cleanText(token.text) === "Ποσότητα")?.x ?? currentQuantityColumnX;
+    }
+    return { ...line, productColumnX: currentProductColumnX, quantityColumnX: currentQuantityColumnX };
+  });
   const images: PdfImageCandidate[] = [];
   try {
     const operatorList = await page.getOperatorList();
@@ -483,7 +494,10 @@ async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi, pageOffset: nu
       const bottom = Math.max(page.view[1], Math.min(...corners.map((point) => point[1])));
       const top = Math.min(page.view[3], Math.max(...corners.map((point) => point[1])));
       // Product photos are in the left image column; barcodes are in the text column.
-      if (right <= x || top <= bottom || (productColumnX !== undefined && (x + right) / 2 >= productColumnX)) continue;
+      const imageCenterY = (bottom + top) / 2 - pageOffset;
+      const imageColumns = lines.findLast((line) => line.y >= imageCenterY) ?? lines[0];
+      const imageProductColumnX = imageColumns?.productColumnX ?? productColumnX;
+      if (right <= x || top <= bottom || (imageProductColumnX !== undefined && (x + right) / 2 >= imageProductColumnX)) continue;
       const data = fn === pdfjsLib.OPS.paintInlineImageXObject
         ? args[0] as PdfImageData
         : await new Promise<PdfImageData | undefined>((resolve) => {
@@ -495,15 +509,6 @@ async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi, pageOffset: nu
     // Image extraction is best effort. Text parsing should never fail because images are unavailable.
   }
 
-  let currentProductColumnX = productColumnX;
-  let currentQuantityColumnX = quantityColumnX;
-  const lines = groupLines(tokens).map((line) => {
-    if (isHeaderLine(line.text)) {
-      currentProductColumnX = line.tokens.find((token) => cleanText(token.text) === "Προϊόν")?.x ?? currentProductColumnX;
-      currentQuantityColumnX = line.tokens.find((token) => cleanText(token.text) === "Ποσότητα")?.x ?? currentQuantityColumnX;
-    }
-    return { ...line, productColumnX: currentProductColumnX, quantityColumnX: currentQuantityColumnX };
-  });
   return { lines, images, columns: { productColumnX: currentProductColumnX, quantityColumnX: currentQuantityColumnX } };
 }
 

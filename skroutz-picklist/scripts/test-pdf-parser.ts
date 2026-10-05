@@ -4,7 +4,7 @@ import { inflateSync } from "node:zlib";
 import { parseOrderPdf, parseProductsFromTextLines, PdfOrderParseError } from "../lib/pdf/parseOrderPdf";
 
 type Text = { text: string; x: number; y: number };
-type Photo = { y: number; color: [number, number, number] };
+type Photo = { x?: number; y: number; color: [number, number, number] };
 
 // Minimal PDFs exercise the real PDF.js text/image operators, including page breaks.
 function fixture(pages: Array<{ text: Text[]; photos: Photo[] }>): Uint8Array {
@@ -27,7 +27,7 @@ function fixture(pages: Array<{ text: Text[]; photos: Photo[] }>): Uint8Array {
         const encoded = unicodeIndex >= 0 ? String.fromCharCode(65 + unicodeIndex) : text.replace(/[\\()]/g, "\\$&");
         return `BT /${unicodeIndex >= 0 ? "F2" : "F1"} 11 Tf 1 0 0 1 ${x} ${y} Tm (${encoded}) Tj ET`;
       }),
-      ...page.photos.map((photo, i) => `q 60 0 0 60 40 ${photo.y} cm /Photo${i} Do Q`),
+      ...page.photos.map((photo, i) => `q 60 0 0 60 ${photo.x ?? 40} ${photo.y} cm /Photo${i} Do Q`),
     ].join("\n");
     const contents = add(stream("", Buffer.from(content)));
     pageIds.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${font} 0 R /F2 ${unicodeFont} 0 R >> /XObject << ${images.map((id, i) => `/Photo${i} ${id} 0 R`).join(" ")} >> >> /Contents ${contents} 0 R >>`));
@@ -136,6 +136,34 @@ test("a title split between pages keeps the photo from the previous page", async
   assert.equal(product.title, "Huawei Watch Fit 5 Pro - Plum");
   assert.equal(product.mpn, "KF-5949419373785");
   assert.deepEqual(firstPixel(product.image), [255, 0, 255]);
+});
+
+test("EAN-only page continuation is not swallowed by a later wider table category", async () => {
+  const products = await parseOrderPdf(fixture([
+    { text: [
+      { text: "Bicycle covers", x: 40, y: 180 },
+      { text: "Προϊόν", x: 120, y: 150 }, { text: "Ποσότητα", x: 500, y: 150 },
+      { text: "Wozinsky WPP-010 cover", x: 120, y: 100 },
+      { text: "MPN: HL-5907769384813", x: 120, y: 80 }, { text: "1 x", x: 500, y: 60 },
+    ], photos: [{ y: 50, color: [255, 0, 0] }] },
+    { text: [
+      { text: "EAN: 590776938", x: 120, y: 790 }, { text: "4813", x: 185, y: 790 },
+      { text: "Touch pens", x: 40, y: 690 },
+      { text: "Προϊόν", x: 210, y: 660 }, { text: "Ποσότητα", x: 460, y: 660 },
+      { text: "Stylus Pen Black", x: 210, y: 620 }, { text: "MPN: THP042BLK", x: 210, y: 600 },
+      { text: "EAN: 5906735410952", x: 210, y: 580 }, { text: "2 x", x: 460, y: 600 },
+    ], photos: [{ x: 140, y: 575, color: [0, 255, 0] }] },
+  ]));
+  assert.equal(products.length, 2);
+  assert.equal(products[0].category, "Bicycle covers");
+  assert.equal(products[0].title, "Wozinsky WPP-010 cover");
+  assert.equal(products[0].mpn, "HL-5907769384813");
+  assert.equal(products[0].ean, "5907769384813");
+  assert.equal(products[0].quantity, 1);
+  assert.equal(products[1].category, "Touch pens");
+  assert.equal(products[1].quantity, 2);
+  assert.deepEqual(firstPixel(products[0].image), [255, 0, 0]);
+  assert.deepEqual(firstPixel(products[1].image), [0, 255, 0]);
 });
 
 test("a table header on the previous page is not replaced by a later table's columns", async () => {

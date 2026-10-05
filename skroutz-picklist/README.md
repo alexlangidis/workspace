@@ -13,7 +13,7 @@ Open [http://localhost:3000](http://localhost:3000), upload a new order PDF, and
 
 ## PDF parsing
 
-The app uses `pdfjs-dist` in the Node.js route handler at `app/api/parse-pdf/route.ts`. It reads the PDF text layer and table column positions, reconstructs wrapped titles and rows continuing across pages, handles split MPN/EAN text fragments, and extracts quantities from the quantity column. Category headings are identified by their table position and header, rather than product-title keywords. An incomplete product causes an explicit upload error instead of being silently omitted or mixed with the next row.
+The app uses `pdfjs-dist` in the Node.js route handler at `app/api/parse-pdf/route.ts`. It reads the PDF text layer and table column positions, reconstructs wrapped titles and rows continuing across pages, handles split MPN/EAN text fragments, and extracts quantities from the quantity column. Page continuations retain the preceding table's columns until a new header changes them, including pages beginning with only an EAN. Photos are classified using the table columns at their own vertical position. Category headings are identified by their table position and header, rather than product-title keywords. An incomplete product causes an explicit upload error instead of being silently omitted or mixed with the next row.
 
 Run the sample parser check with:
 
