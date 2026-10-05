@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, ArrowUp, Check, FilePlus2, RotateCcw, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
@@ -8,7 +8,7 @@ import { FilterControls, type Filter } from "@/components/FilterControls";
 import { Logo } from "@/components/Logo";
 import { ProductRow } from "@/components/ProductRow";
 import { ProgressHeader } from "@/components/ProgressHeader";
-import { readStoredOrder, writeStoredOrder } from "@/lib/storage";
+import { clearStoredOrder, readStoredOrder, storageErrorMessage, writeStoredOrder } from "@/lib/storage";
 import type { Product, StoredOrder } from "@/types/product";
 
 type Feedback = { type: "success" | "error"; title: string; detail?: string };
@@ -20,6 +20,9 @@ function normalizeCode(value: string) {
 export default function ChecklistPage() {
   const router = useRouter();
   const [order, setOrder] = useState<StoredOrder | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [storageError, setStorageError] = useState("");
+  const leavingRef = useRef(false);
   const [filter, setFilter] = useState<Filter>("pending");
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -28,12 +31,26 @@ export default function ChecklistPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setOrder(readStoredOrder()));
-    return () => window.cancelAnimationFrame(frame);
+    let cancelled = false;
+    void readStoredOrder().then((stored) => {
+      if (!cancelled) setOrder(stored);
+    }).catch((error: unknown) => {
+      if (!cancelled) setStorageError(storageErrorMessage(error));
+    }).finally(() => {
+      if (!cancelled) setIsLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (order) writeStoredOrder(order);
+    if (!order || leavingRef.current) return;
+    let cancelled = false;
+    void writeStoredOrder(order).then(() => {
+      if (!cancelled) setStorageError("");
+    }).catch((error: unknown) => {
+      if (!cancelled) setStorageError(`Η τελευταία πρόοδος δεν αποθηκεύτηκε. ${storageErrorMessage(error)}`);
+    });
+    return () => { cancelled = true; };
   }, [order]);
 
   useEffect(() => {
@@ -53,6 +70,7 @@ export default function ChecklistPage() {
   const completedProducts = useMemo(() => products.filter((product) => product.pickedQuantity === product.quantity).length, [products]);
 
   const updateQuantity = useCallback((id: string, nextQuantity: number) => {
+    if (leavingRef.current) return;
     setOrder((current) => current ? { ...current, products: current.products.map((product) => product.id === id ? { ...product, pickedQuantity: Math.max(0, Math.min(product.quantity, nextQuantity)) } : product) } : current);
   }, []);
 
@@ -113,14 +131,22 @@ export default function ChecklistPage() {
   }, [closeScanner, handleScan, scannerTargetId]);
 
   function resetProgress() {
+    if (leavingRef.current) return;
     if (!window.confirm("Να μηδενιστεί η πρόοδος συλλογής;")) return;
     setOrder((current) => current ? { ...current, products: current.products.map((product) => ({ ...product, pickedQuantity: 0 })) } : current);
   }
 
-  function newOrder() {
+  async function newOrder() {
+    if (leavingRef.current) return;
     if (!window.confirm("Να διαγραφεί η τρέχουσα παραγγελία και να ανέβει νέα;")) return;
-    window.localStorage.removeItem("picking-list-order-v1");
-    router.push("/");
+    leavingRef.current = true;
+    try {
+      await clearStoredOrder();
+      router.push("/");
+    } catch (error) {
+      leavingRef.current = false;
+      setStorageError(storageErrorMessage(error));
+    }
   }
 
   const visibleProducts = useMemo(() => {
@@ -140,6 +166,10 @@ export default function ChecklistPage() {
     });
     return groups;
   }, [visibleProducts]);
+
+  if (isLoading || (!order && storageError)) {
+    return <main className="min-h-screen bg-cream px-5 py-12 text-center text-ink"><Logo /><p role="status" className="mt-12">{isLoading ? "Φόρτωση αποθηκευμένης λίστας…" : storageError}</p>{!isLoading && <button type="button" className="mt-6 rounded-xl bg-teal px-5 py-3 text-white" onClick={() => window.location.reload()}>Δοκίμασε ξανά</button>}</main>;
+  }
 
   if (!order) {
     return (
@@ -163,6 +193,7 @@ export default function ChecklistPage() {
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-12"><Logo /><div className="flex items-center gap-2"><button type="button" onClick={resetProgress} className="hidden items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-muted transition hover:bg-white hover:text-ink sm:flex"><RotateCcw size={15} /> Μηδενισμός προόδου</button><button type="button" onClick={newOrder} className="flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-xs font-bold text-ink transition hover:border-coral hover:text-coral"><FilePlus2 size={15} /> <span className="hidden sm:inline">Νέα παραγγελία</span><span className="sm:hidden">Νέα</span></button></div></div>
       </header>
       <div className="mx-auto max-w-[1440px] px-5 pb-16 pt-7 sm:px-8 lg:px-12 lg:pt-10">
+        {storageError && <div role="alert" className="mb-6 rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral"><p>{storageError}</p><button type="button" className="mt-2 underline" onClick={() => { void writeStoredOrder(order).then(() => setStorageError("")).catch((error: unknown) => setStorageError(storageErrorMessage(error))); }}>Επανάληψη αποθήκευσης</button></div>}
         <div className="mb-7"><button type="button" onClick={() => router.push("/")} className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-muted transition hover:text-teal"><ArrowLeft size={14} /> νέα εισαγωγή</button><h1 className="font-display text-4xl font-semibold tracking-[-0.07em] sm:text-5xl">Η λίστα σου.</h1><p className="mt-2 text-sm text-muted">{order.sourceName} <span className="mx-2 text-line">·</span> έτοιμη για συλλογή</p></div>
         {feedback && <div className={`mb-6 flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm font-semibold shadow-sm ${feedback.type === "success" ? "border-teal/20 bg-mint text-teal" : "border-coral/30 bg-coral/10 text-coral"}`}><div className={`grid size-7 shrink-0 place-items-center rounded-full ${feedback.type === "success" ? "bg-teal text-white" : "bg-coral text-white"}`}>{feedback.type === "success" ? <Check size={15} strokeWidth={3} /> : <AlertTriangle size={15} />}</div><div className="min-w-0 flex-1"><p className="truncate">{feedback.title}</p>{feedback.detail && <p className="mt-0.5 text-xs font-medium opacity-75">{feedback.detail}</p>}</div><button type="button" onClick={() => setFeedback(null)} aria-label="Κλείσιμο μηνύματος"><X size={16} /></button></div>}
         <div className="sticky top-[73px] z-10 -mx-5 mb-1 border-y border-line/80 bg-cream/90 px-5 py-2 backdrop-blur-md sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">

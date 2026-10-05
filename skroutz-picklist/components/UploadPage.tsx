@@ -4,7 +4,7 @@ import { ChangeEvent, DragEvent, useRef, useState } from "react";
 import { FileUp, LoaderCircle, ScanLine, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
-import { writeStoredOrder } from "@/lib/storage";
+import { storageErrorMessage, writeStoredOrder } from "@/lib/storage";
 import type { Product } from "@/types/product";
 
 type ParseResponse = { products?: Product[]; sourceName?: string; error?: string };
@@ -12,18 +12,20 @@ type ParseResponse = { products?: Product[]; sourceName?: string; error?: string
 export default function UploadPage() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const processingRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
   async function processFile(file?: File) {
-    if (!file) return;
+    if (!file || processingRef.current) return;
     setError("");
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       setError("Επίλεξε ένα αρχείο PDF για να συνεχίσεις.");
       return;
     }
 
+    processingRef.current = true;
     setIsProcessing(true);
     try {
       const formData = new FormData();
@@ -40,20 +42,22 @@ export default function UploadPage() {
         throw new Error(result.error || "Δεν βρέθηκαν προϊόντα στο PDF.");
       }
 
-      writeStoredOrder({
+      await writeStoredOrder({
         products: result.products,
         sourceName: result.sourceName || file.name,
         parsedAt: new Date().toISOString(),
-      });
+      }).catch((error: unknown) => { throw new Error(storageErrorMessage(error)); });
       router.push("/checklist");
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Η επεξεργασία απέτυχε.");
       setIsProcessing(false);
+      processingRef.current = false;
     }
   }
 
   function onInputChange(event: ChangeEvent<HTMLInputElement>) {
     void processFile(event.target.files?.[0]);
+    event.target.value = "";
   }
 
   function onDrop(event: DragEvent<HTMLDivElement>) {

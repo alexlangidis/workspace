@@ -1,6 +1,6 @@
 # skroutz-picklist
 
-Local-first PDF-to-picking-checklist MVP for Skroutz order exports. The app runs entirely in the browser plus a local Next.js route handler; it does not use WooCommerce, Skroutz APIs, external APIs, authentication, or a database.
+Local-first PDF-to-picking-checklist MVP for Skroutz order exports. The app runs in the browser plus a Next.js route handler; it does not use WooCommerce, Skroutz APIs, external APIs, authentication, or a remote database.
 
 ## Install and run
 
@@ -39,7 +39,9 @@ Camera access requires HTTPS in production (localhost is also allowed by browser
 
 ## Local persistence
 
-Parsed products and `pickedQuantity` are saved in `localStorage`, so a refresh keeps progress. `Μηδενισμός προόδου` resets counts; `Νέα παραγγελία` clears the current order after confirmation.
+Parsed products, images and `pickedQuantity` are saved locally in IndexedDB, rather than serializing large image-heavy orders into the much smaller Web Storage quota. Uploads wait for the transaction to commit before opening the checklist. Saves and deletion are serialized; failed progress saves display a persistent warning with a retry button. Existing localStorage orders migrate automatically, preserving their progress and removing the old copy only after a successful commit. No remote database is used.
+
+`Μηδενισμός προόδου` resets counts; `Νέα παραγγελία` clears the current order after confirmation. Browser storage is still finite and can be removed by the browser or user. Actual storage failures show an actionable message instead of silently losing progress.
 
 ## Checks
 
@@ -48,4 +50,5 @@ npm run typecheck
 npm run lint
 npm run test:pdf
 npm run build
+npm run test:storage
 ```

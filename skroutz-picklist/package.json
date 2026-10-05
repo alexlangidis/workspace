@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "parse:sample": "tsx scripts/parse-sample.ts",
-    "test:pdf": "tsx scripts/test-pdf-parser.ts"
+    "test:pdf": "tsx scripts/test-pdf-parser.ts",
+    "test:storage": "tsx scripts/test-storage.ts"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
