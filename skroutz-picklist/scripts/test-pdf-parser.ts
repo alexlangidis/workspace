@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { inflateSync } from "node:zlib";
 import { parseOrderPdf, parseProductsFromTextLines, PdfOrderParseError } from "../lib/pdf/parseOrderPdf";
+import type { ParseWarning } from "../types/product";
+import { POST } from "../app/api/parse-pdf/route";
 
 type Text = { text: string; x: number; y: number };
 type Photo = { x?: number; y: number; color: [number, number, number] };
@@ -122,6 +124,65 @@ test("incomplete rows produce an error instead of silently dropping or shifting 
     "Broken product", "MPN: BROKEN", "1 ×",
     "Next product", "MPN: NEXT", "EAN: 5907769300684", "1 ×",
   ]), PdfOrderParseError);
+});
+
+test("partial mode keeps valid rows before and after incomplete rows", () => {
+  const warnings: ParseWarning[] = [];
+  const products = parseProductsFromTextLines([
+    "Good first", "MPN: FIRST", "EAN: 5907769300684", "1 ×",
+    "Broken middle", "MPN: BROKEN", "2 ×",
+    "Good next", "MPN: NEXT", "EAN: 9589046921490", "3 ×",
+    "Broken final", "MPN: FINAL", "EAN: 5906302360765",
+  ], warnings);
+  assert.deepEqual(products.map(p => [p.title, p.quantity]), [["Good first", 1], ["Good next", 3]]);
+  assert.deepEqual(warnings.map(w => w.productTitle), ["Broken middle", "Broken final"]);
+  assert.match(warnings[0].message, /EAN/);
+  assert.match(warnings[1].message, /ποσότητα/);
+});
+
+test("partial mode excludes duplicate identifiers and conflicting quantities", () => {
+  const warnings: ParseWarning[] = [];
+  const products = parseProductsFromTextLines([
+    "Duplicate MPN", "MPN: ONE", "MPN: TWO", "EAN: 5907769300684", "1 ×",
+    "Duplicate EAN", "MPN: CODE", "EAN: 5907769300684", "EAN: 9589046921490", "1 ×",
+    "Conflicting counts", "MPN: COUNT", "EAN: 5907769300684", "1 ×", "2 ×",
+    "Good next", "MPN: NEXT", "EAN: 9589046921490", "1 ×",
+  ], warnings);
+  assert.equal(products.length, 1);
+  assert.equal(products[0].title, "Good next");
+  assert.equal(warnings.length, 3);
+});
+
+function partialFixture(allBroken = false) {
+  return fixture([{ text: [
+    { text: "Broken product", x: 120, y: 740 }, { text: "MPN: BROKEN", x: 120, y: 720 }, { text: "1 x", x: 500, y: 720 },
+    ...(!allBroken ? [
+      { text: "Good next", x: 120, y: 620 }, { text: "MPN: NEXT", x: 120, y: 600 },
+      { text: "EAN: 9589046921490", x: 120, y: 580 }, { text: "2 x", x: 500, y: 600 },
+    ] : []),
+  ], photos: [{ y: 695, color: [255, 0, 0] }, ...(!allBroken ? [{ y: 575, color: [0, 255, 0] as [number, number, number] }] : [])] }]);
+}
+
+test("partial PDF parsing preserves photo identity after a skipped row", async () => {
+  const warnings: ParseWarning[] = [];
+  const products = await parseOrderPdf(partialFixture(), warnings);
+  assert.equal(products.length, 1);
+  assert.equal(products[0].title, "Good next");
+  assert.deepEqual(firstPixel(products[0].image), [0, 255, 0]);
+  assert.equal(warnings[0].productTitle, "Broken product");
+});
+
+test("upload route returns partial success, but rejects wholly incomplete orders", async () => {
+  for (const allBroken of [false, true]) {
+    const form = new FormData();
+    form.append("file", new File([Buffer.from(partialFixture(allBroken))], "partial.pdf", { type: "application/pdf" }));
+    const response = await POST(new Request("http://localhost/api/parse-pdf", { method: "POST", body: form }));
+    assert.equal(response.status, allBroken ? 422 : 200);
+    const data = await response.json();
+    assert.equal(data.warnings.length, 1);
+    if (!allBroken) assert.equal(data.products[0].title, "Good next");
+    else assert.ok(data.error);
+  }
 });
 
 test("a title split between pages keeps the photo from the previous page", async () => {

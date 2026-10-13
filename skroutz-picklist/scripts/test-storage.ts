@@ -61,6 +61,7 @@ Object.defineProperty(globalThis, "window", {
 });
 
 const order: StoredOrder = {
+  warnings: [{ productTitle: "Skipped product", message: "Δεν διαβάστηκε το EAN." }],
   sourceName: "fixture.pdf", parsedAt: "2026-10-05T12:00:00Z",
   products: [{ id: "1", title: "Product", category: "Category", mpn: "MPN", ean: "5900000000000", quantity: 2, pickedQuantity: 1, originalIndex: 0, image: `data:image/png;base64,${"A".repeat(6 * 1024 * 1024)}` }],
 };

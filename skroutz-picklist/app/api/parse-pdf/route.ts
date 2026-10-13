@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseOrderPdf, PdfOrderParseError } from "@/lib/pdf/parseOrderPdf";
+import type { ParseWarning } from "@/types/product";
 
 export const runtime = "nodejs";
 
@@ -15,15 +16,16 @@ export async function POST(request: Request) {
     }
 
     const buffer = new Uint8Array(await file.arrayBuffer());
-    const products = await parseOrderPdf(buffer);
+    const warnings: ParseWarning[] = [];
+    const products = await parseOrderPdf(buffer, warnings);
     if (products.length === 0) {
       return NextResponse.json(
-        { error: "Δεν βρέθηκαν προϊόντα στο PDF. Έλεγξε ότι περιέχει το αναμενόμενο text layer." },
+        { error: warnings.length ? "Δεν διαβάστηκε πλήρως κανένα προϊόν. Έλεγξε το PDF ή εξήγαγέ το ξανά από το Skroutz." : "Δεν βρέθηκαν προϊόντα στο PDF. Έλεγξε ότι περιέχει το αναμενόμενο text layer.", warnings },
         { status: 422 },
       );
     }
 
-    return NextResponse.json({ products, sourceName: file.name });
+    return NextResponse.json({ products, warnings, sourceName: file.name });
   } catch (error) {
     if (error instanceof PdfOrderParseError) {
       return NextResponse.json({ error: error.message }, { status: 422 });

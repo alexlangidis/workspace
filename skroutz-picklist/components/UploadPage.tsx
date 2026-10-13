@@ -5,9 +5,9 @@ import { FileUp, LoaderCircle, ScanLine, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { storageErrorMessage, writeStoredOrder } from "@/lib/storage";
-import type { Product } from "@/types/product";
+import type { Product, ParseWarning } from "@/types/product";
 
-type ParseResponse = { products?: Product[]; sourceName?: string; error?: string };
+type ParseResponse = { products?: Product[]; warnings?: ParseWarning[]; sourceName?: string; error?: string };
 
 export default function UploadPage() {
   const router = useRouter();
@@ -44,6 +44,7 @@ export default function UploadPage() {
 
       await writeStoredOrder({
         products: result.products,
+        warnings: result.warnings,
         sourceName: result.sourceName || file.name,
         parsedAt: new Date().toISOString(),
       }).catch((error: unknown) => { throw new Error(storageErrorMessage(error)); });

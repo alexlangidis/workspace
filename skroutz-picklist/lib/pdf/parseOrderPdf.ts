@@ -1,5 +1,5 @@
 import { deflateSync } from "node:zlib";
-import type { Product } from "@/types/product";
+import type { Product, ParseWarning } from "@/types/product";
 
 type PdfJsApi = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
 
@@ -320,10 +320,10 @@ function looksLikeMpn(value: string): boolean {
 
 export class PdfOrderParseError extends Error {}
 
-function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] = []): Product[] {
+function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] = [], warnings?: ParseWarning[]): Product[] {
   const products: Product[] = [];
   let category = "Λοιπά";
-  let current: (Partial<Product> & { topY: number; bottomY: number; titleX: number }) | null = null;
+  let current: (Partial<Product> & { topY: number; bottomY: number; titleX: number; invalidReason?: string }) | null = null;
   let lastField: "MPN" | "EAN" | undefined;
   const usedImages = new Set<PdfImageCandidate>();
 
@@ -333,10 +333,6 @@ function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] =
     const ean = extractEan(current.ean ?? "") ?? "";
     const mpn = normalizeFieldValue(current.mpn ?? "");
     const quantity = Number(current.quantity);
-    if (!title || !ean || !looksLikeMpn(mpn) || !Number.isFinite(quantity) || quantity < 1) {
-      throw new PdfOrderParseError(`Δεν διαβάστηκε πλήρως το προϊόν «${title || mpn || ean || "χωρίς τίτλο"}». Έλεγξε αν ο τίτλος, το MPN, το EAN ή η ποσότητα έχουν κοπεί στο PDF.`);
-    }
-
     const row = current;
     // Match by location, never by array index: one missing row/image must not shift the rest.
     const image = images
@@ -345,6 +341,16 @@ function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] =
       .filter(({ overlap }) => overlap > 0)
       .sort((a, b) => b.overlap - a.overlap)[0]?.candidate;
     if (image) usedImages.add(image);
+    if (current.invalidReason || !title || !ean || !looksLikeMpn(mpn) || !Number.isFinite(quantity) || quantity < 1) {
+      const productTitle = title || mpn || ean || "χωρίς τίτλο";
+      const missing = [!title && "τίτλος", !looksLikeMpn(mpn) && "MPN", !ean && "EAN", (!Number.isFinite(quantity) || quantity < 1) && "ποσότητα"].filter(Boolean);
+      const message = current.invalidReason ?? `Δεν διαβάστηκαν πλήρως: ${missing.join(", ")}.`;
+      if (!warnings) throw new PdfOrderParseError(`Δεν διαβάστηκε πλήρως το προϊόν «${productTitle}». ${message} Έλεγξε το PDF.`);
+      warnings.push({ productTitle, message });
+      current = null;
+      lastField = undefined;
+      return;
+    }
     const productIndex = products.length;
     products.push({
       id: `${ean}-${productIndex}`,
@@ -371,8 +377,9 @@ function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] =
     while (categoryEnd + 1 < lines.length && categoryEnd - index < 3 && !isHeaderLine(lines[categoryEnd + 1].text) && line.productColumnX !== undefined && lines[categoryEnd + 1].minX < line.productColumnX - 10) categoryEnd += 1;
     if (text && isHeaderLine(lines[categoryEnd + 1]?.text ?? "") && (line.productColumnX === undefined || line.minX < line.productColumnX - 10)) {
       // A repeated table header can occur in the middle of a row at a page break.
-      if (current?.title && current.mpn && extractEan(current.ean ?? "") && current.quantity) flush();
-      category = cleanText(lines.slice(index, categoryEnd + 1).map((item) => item.text).join(" "));
+      const nextCategory = cleanText(lines.slice(index, categoryEnd + 1).map((item) => item.text).join(" "));
+      if (current && (nextCategory !== category || (current.title && current.mpn && extractEan(current.ean ?? "") && current.quantity))) flush();
+      category = nextCategory;
       index = categoryEnd;
       continue;
     }
@@ -398,12 +405,18 @@ function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] =
     current.bottomY = Math.min(current.bottomY, line.y);
 
     if (hasMpn) {
-      if (current.mpn !== undefined) throw new PdfOrderParseError("Βρέθηκε δεύτερο MPN στην ίδια γραμμή προϊόντος. Έλεγξε τη διάταξη του PDF.");
+      if (current.mpn !== undefined) {
+        if (!warnings) throw new PdfOrderParseError("Βρέθηκε δεύτερο MPN στην ίδια γραμμή προϊόντος. Έλεγξε τη διάταξη του PDF.");
+        current.invalidReason = "Βρέθηκαν περισσότερα από ένα MPN. Έλεγξε τη γραμμή στο PDF.";
+      }
       current.mpn = mpn ?? "";
       lastField = "MPN";
     }
     if (hasEan) {
-      if (current.ean !== undefined) throw new PdfOrderParseError("Βρέθηκε δεύτερο EAN στην ίδια γραμμή προϊόντος. Έλεγξε τη διάταξη του PDF.");
+      if (current.ean !== undefined) {
+        if (!warnings) throw new PdfOrderParseError("Βρέθηκε δεύτερο EAN στην ίδια γραμμή προϊόντος. Έλεγξε τη διάταξη του PDF.");
+        current.invalidReason = "Βρέθηκαν περισσότερα από ένα EAN. Έλεγξε τη γραμμή στο PDF.";
+      }
       current.ean = ean ?? "";
       lastField = "EAN";
     }
@@ -417,7 +430,8 @@ function parseProductsFromLines(lines: TextLine[], images: PdfImageCandidate[] =
     }
     if (quantity !== null) {
       if (current.quantity !== undefined && current.quantity !== quantity) {
-        throw new PdfOrderParseError("Βρέθηκαν διαφορετικές ποσότητες για το ίδιο προϊόν. Έλεγξε τη διάταξη του PDF.");
+        if (!warnings) throw new PdfOrderParseError("Βρέθηκαν διαφορετικές ποσότητες για το ίδιο προϊόν. Έλεγξε τη διάταξη του PDF.");
+        current.invalidReason = "Βρέθηκαν διαφορετικές ποσότητες. Έλεγξε τη γραμμή στο PDF.";
       }
       current.quantity = quantity;
     }
@@ -526,7 +540,7 @@ async function getPdfDocument(data: Uint8Array, pdfjsLib: PdfJsApi) {
   return loadingTask.promise;
 }
 
-export async function parseOrderPdf(data: Uint8Array): Promise<Product[]> {
+export async function parseOrderPdf(data: Uint8Array, warnings?: ParseWarning[]): Promise<Product[]> {
   const pdfjsLib = await loadPdfjs();
   const pdf = await getPdfDocument(data, pdfjsLib);
   const allLines: TextLine[] = [];
@@ -542,13 +556,13 @@ export async function parseOrderPdf(data: Uint8Array): Promise<Product[]> {
       columns = extracted.columns;
       pageOffset += page.view[3] - page.view[1];
     }
-    return parseProductsFromLines(allLines, allImages);
+    return parseProductsFromLines(allLines, allImages, warnings);
   } finally {
     await pdf.destroy();
   }
 }
 
-export function parseProductsFromTextLines(lines: string[]): Product[] {
+export function parseProductsFromTextLines(lines: string[], warnings?: ParseWarning[]): Product[] {
   const positioned = lines.map((text, index) => ({
     text,
     x: 0,
@@ -556,5 +570,5 @@ export function parseProductsFromTextLines(lines: string[]): Product[] {
     width: text.length,
     height: 10,
   }));
-  return parseProductsFromLines(groupLines(positioned));
+  return parseProductsFromLines(groupLines(positioned), [], warnings);
 }

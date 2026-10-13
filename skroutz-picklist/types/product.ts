@@ -11,7 +11,10 @@ export type Product = {
 };
 
 export type StoredOrder = {
+  warnings?: ParseWarning[];
   products: Product[];
   sourceName: string;
   parsedAt: string;
 };
+
+export type ParseWarning = { productTitle: string; message: string };

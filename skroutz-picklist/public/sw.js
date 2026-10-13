@@ -1,4 +1,4 @@
-const CACHE_NAME = "skroutz-picklist-v2";
+const CACHE_NAME = "skroutz-picklist-v3";
 const APP_SHELL = ["/", "/checklist", "/icon.svg", "/offline.html"];
 
 self.addEventListener("install", (event) => {
