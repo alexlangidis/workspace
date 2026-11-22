@@ -50,7 +50,10 @@ export function ProductRow({ product, onChangeQuantity, onCollect, onToggleCompl
             type="button"
             onClick={() => onToggleCompletion(product.id)}
             disabled={product.pickedQuantity === 0}
-            className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-lg border border-line bg-white px-2.5 text-xs font-bold text-teal transition hover:border-teal/40 hover:bg-mint disabled:cursor-not-allowed disabled:text-muted/70 disabled:hover:border-line disabled:hover:bg-white"
+            className={`mt-3 inline-flex min-h-9 items-center gap-2 rounded-lg border px-2.5 text-xs font-bold transition ${product.completedManually
+              ? "border-line bg-white text-teal hover:border-teal/40 hover:bg-mint"
+              : "border-transparent bg-teal text-white hover:bg-ink disabled:cursor-not-allowed disabled:border-line disabled:bg-white disabled:text-muted/70"
+            }`}
           >
             {product.completedManually ? <Undo2 size={15} /> : <Check size={15} />}
             {product.completedManually ? "Ξανά στα εκκρεμή" : product.pickedQuantity > 0 ? `Ολοκλήρωση με ${product.pickedQuantity} τεμ.` : "Ολοκλήρωση"}
