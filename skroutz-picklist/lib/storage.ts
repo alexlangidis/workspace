@@ -5,6 +5,7 @@ export const ORDER_STORAGE_KEY = "picking-list-order-v1";
 const DATABASE_NAME = "skroutz-picklist";
 const STORE_NAME = "orders";
 const ACTIVE_ORDER = "active";
+const ACTIVE_STOCK_LIST = "active-xlsx";
 let operations: Promise<unknown> = Promise.resolve();
 
 // Keep saves and deletion ordered, even when scans arrive rapidly.
@@ -89,6 +90,19 @@ export function clearStoredOrder(): Promise<void> {
     removeLegacyOrder();
   });
 }
+
+export const stockListStorage = {
+  read: () => enqueue(async () => {
+    const list = await transaction<StoredOrder | undefined>("readonly", store => store.get(ACTIVE_STOCK_LIST));
+    return list && Array.isArray(list.products) ? list : null;
+  }),
+  write: (list: StoredOrder) => enqueue(async () => {
+    await transaction("readwrite", store => store.put(list, ACTIVE_STOCK_LIST));
+  }),
+  clear: () => enqueue(async () => {
+    await transaction("readwrite", store => store.delete(ACTIVE_STOCK_LIST));
+  }),
+};
 
 export function withPickedQuantity(products: Product[], id: string, pickedQuantity: number): Product[] {
   return products.map((product) =>

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { clearStoredOrder, ORDER_STORAGE_KEY, readStoredOrder, storageErrorMessage, writeStoredOrder } from "../lib/storage";
+import { clearStoredOrder, ORDER_STORAGE_KEY, readStoredOrder, stockListStorage, storageErrorMessage, writeStoredOrder } from "../lib/storage";
 import type { StoredOrder } from "../types/product";
 
 // Deterministic transaction fake: requests finish before commits, and aborts
@@ -100,4 +100,23 @@ test("rapid saves and deletion commit in order without resurrecting an old list"
 
 test("quota errors have an actionable Greek message", () => {
   assert.match(storageErrorMessage(quotaError), /χώρος/);
+});
+
+test("XLSX saves and deletion leave the active PDF order and legacy migration intact", async () => {
+  records.clear();
+  legacy.set(ORDER_STORAGE_KEY, JSON.stringify(order));
+  const stockList: StoredOrder = {
+    sourceName: "stock.xlsx",
+    parsedAt: order.parsedAt,
+    products: [{ id: "stock-1", title: "Stock product", category: "Stock", mpn: "", ean: "0590000000000", quantity: 3, pickedQuantity: 2, originalIndex: 0 }],
+  };
+
+  await stockListStorage.write(stockList);
+  assert.ok(legacy.has(ORDER_STORAGE_KEY));
+  assert.deepEqual(await readStoredOrder(), order);
+  assert.deepEqual(await stockListStorage.read(), stockList);
+
+  await stockListStorage.clear();
+  assert.equal(await stockListStorage.read(), null);
+  assert.deepEqual(await readStoredOrder(), order);
 });

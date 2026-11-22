@@ -7,6 +7,7 @@ type FilterControlsProps = {
   search: string;
   onFilterChange: (filter: Filter) => void;
   onSearchChange: (value: string) => void;
+  searchPlaceholder?: string;
 };
 
 const filters: Array<{ id: Filter; label: string }> = [
@@ -15,7 +16,7 @@ const filters: Array<{ id: Filter; label: string }> = [
   { id: "all", label: "Όλα" },
 ];
 
-export function FilterControls({ filter, search, onFilterChange, onSearchChange }: FilterControlsProps) {
+export function FilterControls({ filter, search, onFilterChange, onSearchChange, searchPlaceholder = "Αναζήτηση EAN, MPN ή τίτλου" }: FilterControlsProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex rounded-2xl bg-mint p-1">
@@ -23,7 +24,7 @@ export function FilterControls({ filter, search, onFilterChange, onSearchChange 
       </div>
       <label className="flex h-12 min-w-0 items-center gap-3 rounded-2xl border border-line bg-white px-4 text-muted shadow-sm sm:w-[310px]">
         <Search size={18} />
-        <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Αναζήτηση EAN, MPN ή τίτλου" className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none placeholder:text-muted/70" />
+        <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder={searchPlaceholder} className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none placeholder:text-muted/70" />
       </label>
     </div>
   );

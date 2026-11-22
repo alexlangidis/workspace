@@ -526,28 +526,28 @@ async function extractPage(page: PdfPageLike, pdfjsLib: PdfJsApi, pageOffset: nu
   return { lines, images, columns: { productColumnX: currentProductColumnX, quantityColumnX: currentQuantityColumnX } };
 }
 
-async function getPdfDocument(data: Uint8Array, pdfjsLib: PdfJsApi) {
-  // PDF.js v5 uses its fake worker in Node. Point it at the installed local worker so
+async function loadPdfDocument(data: Uint8Array, pdfjsLib: PdfJsApi) {
+  // PDF.js uses its fake worker in Node. Point it at the installed local worker so
   // Next's bundled route handler can load it without a browser-served worker asset.
   if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
     const workerPath = await import.meta.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
     pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
   }
-  const loadingTask = pdfjsLib.getDocument({
+  return pdfjsLib.getDocument({
     data,
     useWorkerFetch: false,
   });
-  return loadingTask.promise;
 }
 
 export async function parseOrderPdf(data: Uint8Array, warnings?: ParseWarning[]): Promise<Product[]> {
   const pdfjsLib = await loadPdfjs();
-  const pdf = await getPdfDocument(data, pdfjsLib);
+  const loadingTask = await loadPdfDocument(data, pdfjsLib);
   const allLines: TextLine[] = [];
   const allImages: PdfImageCandidate[] = [];
   let pageOffset = 0;
   let columns: TableColumns = {};
   try {
+    const pdf = await loadingTask.promise;
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
       const extracted = await extractPage(page, pdfjsLib, pageOffset, columns);
@@ -558,7 +558,7 @@ export async function parseOrderPdf(data: Uint8Array, warnings?: ParseWarning[])
     }
     return parseProductsFromLines(allLines, allImages, warnings);
   } finally {
-    await pdf.destroy();
+    await loadingTask.destroy();
   }
 }
 

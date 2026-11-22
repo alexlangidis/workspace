@@ -4,6 +4,7 @@ import { ChangeEvent, DragEvent, useRef, useState } from "react";
 import { FileUp, LoaderCircle, ScanLine, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
+import { XlsxUpload } from "@/components/XlsxUpload";
 import { storageErrorMessage, writeStoredOrder } from "@/lib/storage";
 import type { Product, ParseWarning } from "@/types/product";
 
@@ -82,13 +83,13 @@ export default function UploadPage() {
           <div className="animate-fade-up max-w-2xl">
             <p className="mb-6 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.25em] text-lime">
               <span className="h-px w-9 bg-lime/60" />
-              Από PDF σε ράφι
+              Από τη λίστα στο ράφι
             </p>
             <h1 className="font-display max-w-xl text-[clamp(3.2rem,8vw,7rem)] font-semibold leading-[0.88] tracking-[-0.075em] text-paper">
               Μάζεψε την παραγγελία <span className="text-lime">σωστά.</span>
             </h1>
             <p className="mt-8 max-w-md text-base leading-7 text-muted sm:text-lg">
-              Ανέβασε τη λίστα αποστολής από το Skroutz και δούλεψε με μια καθαρή checklist που θυμάται κάθε scan.
+              Ανέβασε τη λίστα αποστολής ή αποθέματος από το Skroutz και δούλεψε με μια checklist που θυμάται κάθε scan.
             </p>
             <div className="mt-10 flex flex-wrap gap-6 text-[12px] font-semibold text-paper/70">
               <span className="inline-flex items-center gap-2"><ShieldCheck size={16} className="text-lime" /> Χωρίς cloud</span>
@@ -132,6 +133,7 @@ export default function UploadPage() {
             </div>
             <input ref={inputRef} type="file" accept="application/pdf,.pdf" onChange={onInputChange} className="sr-only" />
             {error && <p className="mt-4 rounded-2xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm text-coral">{error}</p>}
+            <XlsxUpload />
           </div>
         </section>
 

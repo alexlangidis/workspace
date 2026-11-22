@@ -5,6 +5,7 @@ export type Product = {
   mpn: string;
   ean: string;
   quantity: number;
+  marketplaceStock?: number;
   pickedQuantity: number;
   image?: string;
   originalIndex: number;
