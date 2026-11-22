@@ -7,6 +7,8 @@ export type Product = {
   quantity: number;
   marketplaceStock?: number;
   pickedQuantity: number;
+  completedManually?: boolean;
+  removedFromStockList?: boolean;
   image?: string;
   originalIndex: number;
 };

@@ -8,6 +8,7 @@ import { FilterControls, type Filter } from "@/components/FilterControls";
 import { Logo } from "@/components/Logo";
 import { ProductRow } from "@/components/ProductRow";
 import { ProgressHeader } from "@/components/ProgressHeader";
+import { isProductComplete } from "@/lib/picking";
 import { clearStoredOrder, readStoredOrder, stockListStorage, storageErrorMessage, writeStoredOrder } from "@/lib/storage";
 import type { Product, StoredOrder } from "@/types/product";
 
@@ -94,40 +95,36 @@ export default function ChecklistPage({ source = "pdf" }: { source?: keyof typeo
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const products = useMemo(() => order?.products ?? [], [order]);
-  const unitCount = useMemo(() => products.reduce((sum, product) => sum + product.quantity, 0), [products]);
+  const allProducts = useMemo(() => order?.products ?? [], [order]);
+  const products = useMemo(() => isXlsx ? allProducts.filter((product) => !product.removedFromStockList) : allProducts, [allProducts, isXlsx]);
+  const unitCount = useMemo(() => products.reduce((sum, product) => sum + (product.completedManually ? product.pickedQuantity : product.quantity), 0), [products]);
   const pickedUnits = useMemo(() => products.reduce((sum, product) => sum + product.pickedQuantity, 0), [products]);
-  const completedProducts = useMemo(() => products.filter((product) => product.pickedQuantity === product.quantity).length, [products]);
+  const completedProducts = useMemo(() => products.filter(isProductComplete).length, [products]);
 
   const updateQuantity = useCallback((id: string, nextQuantity: number) => {
     if (leavingRef.current) return;
-    setOrder((current) => current ? { ...current, products: current.products.map((product) => product.id === id ? { ...product, pickedQuantity: Math.max(0, Math.min(product.quantity, nextQuantity)) } : product) } : current);
+    setOrder((current) => current ? { ...current, products: current.products.map((product) => (
+      product.id === id && !product.completedManually && !product.removedFromStockList
+        ? { ...product, pickedQuantity: Math.max(0, Math.min(product.quantity, nextQuantity)) }
+        : product
+    )) } : current);
   }, []);
 
-  function updateTarget(id: string, target: number) {
-    if (!isXlsx || leavingRef.current || !Number.isSafeInteger(target)) return;
-    setOrder((current) => {
-      if (!current) return current;
-      const product = current.products.find((item) => item.id === id);
-      if (!product || product.quantity === target) return current;
-      const marketplaceStock = product.marketplaceStock ?? product.quantity;
-      if (target < Math.max(1, product.pickedQuantity) || target > marketplaceStock) return current;
-      return {
-        ...current,
-        products: current.products.map((item) => item.id === id ? { ...item, quantity: target, marketplaceStock } : item),
-      };
-    });
+  function toggleCompletion(id: string) {
+    if (!isXlsx || leavingRef.current) return;
+    setOrder((current) => current ? { ...current, products: current.products.map((product) => (
+      product.id === id && !product.removedFromStockList && product.pickedQuantity > 0 && product.pickedQuantity < product.quantity
+        ? { ...product, completedManually: !product.completedManually }
+        : product
+    )) } : current);
   }
 
-  function removeProduct(product: Product) {
+  function setProductRemoved(product: Product, removed: boolean) {
     if (!isXlsx || leavingRef.current) return;
-    const pickedNotice = product.pickedQuantity > 0
-      ? `\n\nΤα ${product.pickedQuantity} τεμάχια που έχεις καταχωρίσει θα αφαιρεθούν από την πρόοδο.`
-      : "";
-    if (!window.confirm(`Να αφαιρεθεί το «${product.title}» από τη λίστα;${pickedNotice}`)) return;
-
-    setOrder((current) => current ? { ...current, products: current.products.filter((item) => item.id !== product.id) } : current);
-    setFeedback({ type: "success", title: "Αφαιρέθηκε από τη λίστα", detail: product.title });
+    setOrder((current) => current ? { ...current, products: current.products.map((item) => (
+      item.id === product.id ? { ...item, removedFromStockList: removed } : item
+    )) } : current);
+    setFeedback({ type: "success", title: removed ? "Μεταφέρθηκε στα Αφαιρεμένα" : "Επανήλθε στη λίστα", detail: product.title });
   }
 
   const showScanFeedback = useCallback((nextFeedback: Feedback) => {
@@ -149,12 +146,12 @@ export default function ChecklistPage({ source = "pdf" }: { source?: keyof typeo
     }
 
     const matchingProducts = targetProduct ? [targetProduct] : products.filter((item) => normalizeCode(item.ean) === ean);
-    const product = matchingProducts.find((item) => item.pickedQuantity < item.quantity) ?? matchingProducts[0];
+    const product = matchingProducts.find((item) => !isProductComplete(item)) ?? matchingProducts[0];
     if (!product) {
       showScanFeedback({ type: "error", title: settings.missingProduct, detail: `EAN: ${ean}` });
       return;
     }
-    if (product.pickedQuantity >= product.quantity) {
+    if (isProductComplete(product)) {
       showScanFeedback({ type: "error", title: "Το προϊόν έχει ήδη ολοκληρωθεί", detail: `${product.pickedQuantity} / ${product.quantity}` });
       return;
     }
@@ -189,7 +186,9 @@ export default function ChecklistPage({ source = "pdf" }: { source?: keyof typeo
   function resetProgress() {
     if (leavingRef.current) return;
     if (!window.confirm("Να μηδενιστεί η πρόοδος συλλογής;")) return;
-    setOrder((current) => current ? { ...current, products: current.products.map((product) => ({ ...product, pickedQuantity: 0 })) } : current);
+    setOrder((current) => current ? { ...current, products: current.products.map((product) => (
+      product.completedManually ? { ...product, pickedQuantity: 0, completedManually: false } : { ...product, pickedQuantity: 0 }
+    )) } : current);
   }
 
   async function newOrder() {
@@ -207,15 +206,17 @@ export default function ChecklistPage({ source = "pdf" }: { source?: keyof typeo
 
   const visibleProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return products
-      .filter((product) => filter === "all" || (filter === "completed" ? product.pickedQuantity === product.quantity : product.pickedQuantity < product.quantity))
+    const filtered = filter === "removed"
+      ? allProducts.filter((product) => product.removedFromStockList)
+      : products.filter((product) => filter === "all" || isProductComplete(product) === (filter === "completed"));
+    return filtered
       .filter((product) => {
         if (!query) return true;
         const searchable = [product.title, product.ean, isXlsx ? product.category : product.mpn];
         return searchable.some((value) => value.toLowerCase().includes(query));
       })
-      .sort((a, b) => Number(a.pickedQuantity === a.quantity) - Number(b.pickedQuantity === b.quantity) || a.originalIndex - b.originalIndex);
-  }, [filter, isXlsx, products, search]);
+      .sort((a, b) => Number(isProductComplete(a)) - Number(isProductComplete(b)) || a.originalIndex - b.originalIndex);
+  }, [allProducts, filter, isXlsx, products, search]);
 
   const groupedProducts = useMemo(() => {
     if (isXlsx) {
@@ -236,6 +237,19 @@ export default function ChecklistPage({ source = "pdf" }: { source?: keyof typeo
     });
     return groups;
   }, [isXlsx, visibleProducts]);
+
+  const hasRemoved = allProducts.length > products.length;
+  let emptyProductsTitle = "Δεν βρέθηκαν προϊόντα";
+  let emptyProductsDescription = "Δοκίμασε διαφορετικό φίλτρο ή όρο αναζήτησης.";
+  if (filter === "removed" && !hasRemoved) {
+    emptyProductsTitle = "Δεν υπάρχουν αφαιρεμένα προϊόντα";
+    emptyProductsDescription = "Τα προϊόντα που αφαιρείς από τη λίστα εμφανίζονται εδώ.";
+  } else if (isXlsx && filter !== "removed" && !products.length) {
+    emptyProductsTitle = "Η λίστα FBS είναι κενή";
+    emptyProductsDescription = hasRemoved
+      ? "Μπορείς να επαναφέρεις προϊόντα από τα Αφαιρεμένα."
+      : "Ανέβασε ένα XLSX για να ξεκινήσεις νέα συλλογή.";
+  }
 
   if (isLoading || (!order && storageError)) {
     return <main className="min-h-screen bg-cream px-5 py-12 text-center text-ink"><Logo /><p role="status" className="mt-12">{isLoading ? "Φόρτωση αποθηκευμένης λίστας…" : storageError}</p>{!isLoading && <button type="button" className="mt-6 rounded-xl bg-teal px-5 py-3 text-white" onClick={() => window.location.reload()}>Δοκίμασε ξανά</button>}</main>;
@@ -273,8 +287,8 @@ export default function ChecklistPage({ source = "pdf" }: { source?: keyof typeo
             <ProgressHeader compact productCount={products.length} unitCount={unitCount} pickedUnits={pickedUnits} completedProducts={completedProducts} />
           </div>
         </div>
-        <div className="mt-7"><FilterControls filter={filter} search={search} onFilterChange={setFilter} onSearchChange={setSearch} searchPlaceholder={isXlsx ? "Αναζήτηση EAN, ονόματος ή κατηγορίας" : undefined} /></div>
-        <div className="mt-8 space-y-8">{groupedProducts.length > 0 ? groupedProducts.map((group, groupIndex) => <section key={isXlsx ? group.category : `${group.category}-${group.products[0]?.originalIndex ?? groupIndex}`}><div className="mb-3 flex items-center gap-3"><h2 className="font-display text-xl font-semibold tracking-[-0.04em] text-ink">{group.category}</h2><span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-muted shadow-sm">{group.products.length}</span></div><div className="space-y-3">{group.products.map((product) => <ProductRow key={product.id} product={product} onChangeQuantity={updateQuantity} onCollect={openProductScanner} onChangeTarget={isXlsx ? updateTarget : undefined} onRemove={isXlsx ? removeProduct : undefined} />)}</div></section>) : <div className="rounded-[26px] border border-dashed border-line bg-white px-6 py-16 text-center"><p className="font-display text-xl font-semibold tracking-[-0.04em]">{isXlsx && products.length === 0 ? "Η λίστα FBS είναι κενή" : "Δεν βρέθηκαν προϊόντα"}</p><p className="mt-2 text-sm text-muted">{isXlsx && products.length === 0 ? "Ανέβασε ένα XLSX για να ξεκινήσεις νέα συλλογή." : "Δοκίμασε διαφορετικό φίλτρο ή όρο αναζήτησης."}</p></div>}</div>
+        <div className="mt-7"><FilterControls filter={filter} search={search} onFilterChange={setFilter} onSearchChange={setSearch} searchPlaceholder={isXlsx ? "Αναζήτηση EAN, ονόματος ή κατηγορίας" : undefined} showRemoved={isXlsx} /></div>
+        <div className="mt-8 space-y-8">{groupedProducts.length > 0 ? groupedProducts.map((group, groupIndex) => <section key={isXlsx ? group.category : `${group.category}-${group.products[0]?.originalIndex ?? groupIndex}`}><div className="mb-3 flex items-center gap-3"><h2 className="font-display text-xl font-semibold tracking-[-0.04em] text-ink">{group.category}</h2><span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-muted shadow-sm">{group.products.length}</span></div><div className="space-y-3">{group.products.map((product) => <ProductRow key={product.id} product={product} onChangeQuantity={updateQuantity} onCollect={openProductScanner} onToggleCompletion={isXlsx ? toggleCompletion : undefined} onSetRemoved={isXlsx ? setProductRemoved : undefined} />)}</div></section>) : <div className="rounded-[26px] border border-dashed border-line bg-white px-6 py-16 text-center"><p className="font-display text-xl font-semibold tracking-[-0.04em]">{emptyProductsTitle}</p><p className="mt-2 text-sm text-muted">{emptyProductsDescription}</p></div>}</div>
       </div>
     </main>
   );

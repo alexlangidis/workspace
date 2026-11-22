@@ -94,7 +94,18 @@ export function clearStoredOrder(): Promise<void> {
 export const stockListStorage = {
   read: () => enqueue(async () => {
     const list = await transaction<StoredOrder | undefined>("readonly", store => store.get(ACTIVE_STOCK_LIST));
-    return list && Array.isArray(list.products) ? list : null;
+    if (!list || !Array.isArray(list.products)) return null;
+    // Earlier FBS lists stored an edited picking target in quantity.
+    const products = list.products.map((product) => {
+      const stock = product.marketplaceStock ?? product.quantity;
+      if (product.quantity === stock) return product;
+      return {
+        ...product,
+        quantity: stock,
+        completedManually: product.completedManually || product.pickedQuantity === product.quantity,
+      };
+    });
+    return { ...list, products };
   }),
   write: (list: StoredOrder) => enqueue(async () => {
     await transaction("readwrite", store => store.put(list, ACTIVE_STOCK_LIST));

@@ -120,3 +120,26 @@ test("XLSX saves and deletion leave the active PDF order and legacy migration in
   assert.equal(await stockListStorage.read(), null);
   assert.deepEqual(await readStoredOrder(), order);
 });
+
+test("existing FBS targets restore the stock quantity and preserve actual picks and completion", async () => {
+  const product = { ...order.products[0], image: undefined, quantity: 1, marketplaceStock: 3 };
+  await stockListStorage.write({
+    sourceName: "legacy-targets.xlsx",
+    parsedAt: order.parsedAt,
+    products: [product, { ...product, id: "pending", pickedQuantity: 0 }],
+  });
+
+  const stockList = await stockListStorage.read();
+  assert.ok(stockList);
+  const [completed, pending] = stockList.products;
+  assert.equal(completed.quantity, 3);
+  assert.equal(completed.pickedQuantity, 1);
+  assert.equal(completed.completedManually, true);
+  assert.equal(pending.quantity, 3);
+  assert.equal(pending.pickedQuantity, 0);
+  assert.equal(pending.completedManually, false);
+
+  const removedList = { ...stockList, products: [{ ...completed, removedFromStockList: true }, pending] };
+  await stockListStorage.write(removedList);
+  assert.deepEqual(await stockListStorage.read(), removedList);
+});
